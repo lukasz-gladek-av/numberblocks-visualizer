@@ -1,0 +1,17 @@
+{
+  "name": "numberblock-step-squad",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Interactive 3D educational app showing Numberblocks Step Squad",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "three": "^0.160.0"
+  },
+  "devDependencies": {
+    "vite": "^5.0.0"
+  }
+}
