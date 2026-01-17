@@ -33,6 +33,66 @@ export function initScene() {
 
   scene.fog = new THREE.Fog(0x5B9FD0, 50, 100); // Fog for depth effect (match sky gradient)
 
+  // Add simple billboard clouds
+  const cloudCanvas = document.createElement('canvas');
+  cloudCanvas.width = 256;
+  cloudCanvas.height = 128;
+  const cloudCtx = cloudCanvas.getContext('2d');
+  cloudCtx.clearRect(0, 0, 256, 128);
+  const featherGradient = cloudCtx.createRadialGradient(128, 64, 0, 128, 64, 100);
+  featherGradient.addColorStop(0, 'rgba(255, 255, 255, 0.95)');
+  featherGradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.6)');
+  featherGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+
+  cloudCtx.fillStyle = featherGradient;
+  cloudCtx.beginPath();
+  for (let i = 0; i < 9; i++) {
+    const cx = 40 + Math.random() * 180;
+    const cy = 40 + Math.random() * 50;
+    const rx = 30 + Math.random() * 60;
+    const ry = 14 + Math.random() * 30;
+    const rot = (Math.random() - 0.5) * 0.4;
+    cloudCtx.ellipse(cx, cy, rx, ry, rot, 0, Math.PI * 2);
+  }
+  cloudCtx.fill();
+
+  cloudCtx.globalAlpha = 0.55;
+  cloudCtx.beginPath();
+  for (let i = 0; i < 4; i++) {
+    const cx = 50 + Math.random() * 160;
+    const cy = 50 + Math.random() * 40;
+    const rx = 20 + Math.random() * 40;
+    const ry = 10 + Math.random() * 20;
+    const rot = (Math.random() - 0.5) * 0.5;
+    cloudCtx.ellipse(cx, cy, rx, ry, rot, 0, Math.PI * 2);
+  }
+  cloudCtx.fill();
+  cloudCtx.globalAlpha = 1;
+
+  const cloudTexture = new THREE.CanvasTexture(cloudCanvas);
+  cloudTexture.magFilter = THREE.LinearFilter;
+  cloudTexture.minFilter = THREE.LinearMipmapLinearFilter;
+  const cloudMaterial = new THREE.MeshBasicMaterial({
+    map: cloudTexture,
+    transparent: true,
+    opacity: 0.85,
+    depthWrite: false,
+  });
+
+  const cloudGroup = new THREE.Group();
+  for (let i = 0; i < 12; i++) {
+    const cloud = new THREE.Mesh(new THREE.PlaneGeometry(14, 6), cloudMaterial);
+    cloud.position.set(
+      -30 + Math.random() * 60,
+      12 + Math.random() * 10,
+      -20 - Math.random() * 20
+    );
+    cloud.rotation.y = (Math.random() - 0.5) * 0.4;
+    cloud.scale.set(0.8 + Math.random() * 0.6, 0.8 + Math.random() * 0.4, 1);
+    cloudGroup.add(cloud);
+  }
+  scene.add(cloudGroup);
+
   // Camera setup
   const width = window.innerWidth;
   const height = window.innerHeight;
@@ -68,7 +128,7 @@ export function initScene() {
   scene.add(directionalLight);
 
   // Ground plane with gradient texture
-  const groundGeometry = new THREE.PlaneGeometry(60, 60);
+  const groundGeometry = new THREE.PlaneGeometry(120, 120);
 
   // Create gradient texture with noise
   const gradientCanvas = document.createElement('canvas');
@@ -90,11 +150,10 @@ export function initScene() {
 
   for (let i = 0; i < data.length; i += 4) {
     // Create Perlin-like noise using simple random variation
-    const noise = (Math.random() - 0.5) * 30; // Adjust noise intensity here
+    const noise = (Math.random() - 0.5) * 30;
     data[i] += noise;     // R
     data[i + 1] += noise; // G
     data[i + 2] += noise; // B
-    // Keep alpha unchanged (data[i + 3])
   }
 
   ctx.putImageData(imageData, 0, 0);

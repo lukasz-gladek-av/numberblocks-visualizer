@@ -142,11 +142,8 @@ export class Staircase {
    * Add one more column (increment N)
    */
   addColumn() {
-    if (this.currentN < 20) {
-      this.build(this.currentN + 1);
-      return true;
-    }
-    return false;
+    this.build(this.currentN + 1);
+    return true;
   }
 
   /**

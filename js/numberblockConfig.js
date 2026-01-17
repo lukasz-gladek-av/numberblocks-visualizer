@@ -1,6 +1,6 @@
 /**
  * Numberblocks Configuration System
- * Defines color, borders, and block composition for each number 1-20
+ * Defines color, borders, and block composition for each number 1-99
  * Based on official Numberblocks character design
  */
 
@@ -38,12 +38,12 @@ function createSolidBlocks(count, color, borderColor = null) {
 
 /**
  * Get configuration for a specific number
- * @param {number} number - The number (1-20)
+ * @param {number} number - The number (1-99)
  * @returns {Object} Configuration object with blocks array
  */
 export function getNumberblockConfig(number) {
-  if (number < 1 || number > 20) {
-    throw new Error(`Number must be between 1 and 20, got ${number}`);
+  if (number < 1 || number > 99) {
+    throw new Error(`Number must be between 1 and 99, got ${number}`);
   }
 
   // Handle teens (11-19) by decomposing into tens + ones
@@ -55,6 +55,21 @@ export function getNumberblockConfig(number) {
       number,
       displayName: getNumberName(number),
       blocks: [...tenBlocks, ...oneBlocks],
+      face: getDefaultFaceConfig(number)
+    };
+  }
+
+  // Handle numbers 20-99 by decomposing into tens + ones
+  if (number >= 20) {
+    const tens = Math.floor(number / 10);
+    const ones = number % 10;
+    const { baseColor, borderColor } = getTensColorsForDigit(tens);
+    const tensBlocks = createSolidBlocks(tens * 10, baseColor, borderColor);
+    const oneBlocks = ones > 0 ? getOneBlocksForNumber(ones) : [];
+    return {
+      number,
+      displayName: getNumberName(number),
+      blocks: [...tensBlocks, ...oneBlocks],
       face: getDefaultFaceConfig(number)
     };
   }
@@ -152,14 +167,6 @@ export function getNumberblockConfig(number) {
         blocks: createSolidBlocks(10, COLORS.WHITE, BORDER_COLORS.RED),
         face: getDefaultFaceConfig(10)
       };
-    case 20:
-      // Apricot with orange borders
-      return {
-        number,
-        displayName: 'Twenty',
-        blocks: createSolidBlocks(20, COLORS.APRICOT, BORDER_COLORS.ORANGE),
-        face: getDefaultFaceConfig(20)
-      };
     default:
       throw new Error(`Unknown number: ${number}`);
   }
@@ -205,6 +212,39 @@ function getOneBlocksForNumber(digit) {
     default:
       throw new Error(`Invalid digit: ${digit}`);
   }
+}
+
+function getTensColorsForDigit(digit) {
+  switch (digit) {
+    case 2:
+      return { baseColor: COLORS.APRICOT, borderColor: COLORS.ORANGE };
+    case 3:
+      return { baseColor: lightenColor(COLORS.YELLOW, 0.55), borderColor: COLORS.YELLOW };
+    case 4:
+      return { baseColor: lightenColor(COLORS.GREEN, 0.55), borderColor: COLORS.GREEN };
+    case 5:
+      return { baseColor: lightenColor(COLORS.CYAN, 0.55), borderColor: COLORS.CYAN };
+    case 6:
+      return { baseColor: lightenColor(COLORS.INDIGO, 0.55), borderColor: COLORS.INDIGO };
+    case 7:
+      return { baseColor: lightenColor(COLORS.MAGENTA, 0.55), borderColor: COLORS.MAGENTA };
+    case 8:
+      return { baseColor: lightenColor(COLORS.MAGENTA, 0.45), borderColor: COLORS.MAGENTA };
+    case 9:
+      return { baseColor: COLORS.GREY_LIGHT, borderColor: COLORS.GREY_DARK };
+    default:
+      throw new Error(`Invalid tens digit: ${digit}`);
+  }
+}
+
+function lightenColor(color, amount) {
+  const r = (color >> 16) & 0xff;
+  const g = (color >> 8) & 0xff;
+  const b = color & 0xff;
+  const nr = Math.min(255, Math.round(r + (255 - r) * amount));
+  const ng = Math.min(255, Math.round(g + (255 - g) * amount));
+  const nb = Math.min(255, Math.round(b + (255 - b) * amount));
+  return (nr << 16) | (ng << 8) | nb;
 }
 
 /**

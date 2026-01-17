@@ -6,7 +6,7 @@ Interaktywna edukacyjna aplikacja 3D pokazująca "step squad" z Numberblocks - s
 
 ### Core
 - ✅ Wizualizacja 3D schodów (N kolumn, każda z N blokami)
-- ✅ Przycisk + dodawania kolumn (max 20)
+- ✅ Przycisk + dodawania kolumn
 - ✅ Przycisk - odejmowania kolumn (min 1)
 - ✅ Auto-zoom dostosowujący widok do liczby kolumn
 - ✅ 3D rotacja myszką (OrbitControls)
@@ -15,7 +15,7 @@ Interaktywna edukacyjna aplikacja 3D pokazująca "step squad" z Numberblocks - s
 - ✅ Responsywny UI na mobile i desktop
 
 ### Kolory i Obramowanie (Phase 1 - 2026)
-- ✅ Oficjalne kolory Numberblocks dla liczb 1-20
+- ✅ Oficjalne kolory Numberblocks dla liczb 1-20 oraz schemat dziesiatek (20-99)
 - ✅ Liczba 7: efekt tęczowy (7 różnych kolorów)
 - ✅ Liczba 9: gradient szary (3 skupienia ciemności)
 - ✅ Liczba 10: biały z czerwonym obramowaniem
@@ -42,7 +42,7 @@ numberblock_step_squad/
 │   ├── scene.js               # Three.js setup, kamera, renderer
 │   ├── staircase.js           # Zarządzanie strukturą schodów
 │   ├── blocks.js              # createBlock(), createColumn() - tworzenie z BorderFrame
-│   ├── numberblockConfig.js   # Konfiguracja liczb 1-20 (Phase 1)
+│   ├── numberblockConfig.js   # Konfiguracja liczb 1-99 (Phase 1+)
 │   ├── colors.js              # Schemat kolorów (re-export config system)
 │   ├── faces.js               # Placeholder dla twarzy (Phase 2)
 │   └── controls.js            # UI interakcje i handlery
@@ -87,9 +87,9 @@ npm run build
 ### Liczby 10 i wyżej
 | Liczba | Bloki | Obramowanie |
 |--------|-------|-------------|
-| 10 | White #FFFFFF | Red #FF2E3B (12 krawędzi) |
+| 10 | White #FFFFFF | Red #FF2E3B (pelna ramka) |
 | 11-19 | 10 White + jednostki | Red border (część 10) |
-| 20 | Apricot #FFCC99 | Orange #FF8C00 (12 krawędzi) |
+| 20 | Apricot #FFCC99 | Orange #FF8C00 (pelna ramka) |
 
 ### Notatka
 Liczby nastoletnie (11-19) są rozkładane na komponenty:
@@ -99,7 +99,7 @@ Liczby nastoletnie (11-19) są rozkładane na komponenty:
 ## Implementacja - Kluczowe decyzje (Phase 1)
 
 ### 1. System Konfiguracji Oparty na Obiektach
-`numberblockConfig.js` zawiera pełne definicje dla liczb 1-20:
+`numberblockConfig.js` zawiera pelne definicje dla liczb 1-99:
 ```javascript
 getNumberblockConfig(number) → {
   number,
@@ -114,7 +114,7 @@ Każdy blok w konfiguracji ma:
 - `borderColor` (hex | null) - kolor obramowania grupy (null = bez obramowania)
 - `blockType` (string) - typ bloku ('one' dla jednotek, 'ten' dla dziesiątek)
 
-### 2. Rozkład Liczb Nastoletnih (Place-Value Decomposition)
+### 2. Rozklad Liczb (Place-Value Decomposition)
 Liczby 11-19 są zbudowane przez konkatenację:
 ```javascript
 // Przykład: 14 = Ten + Four
@@ -172,7 +172,7 @@ Refaktoryzacja Phase 1 - System konfiguracji i obramowanie krawędziowe:
 - ✅ Liczba 20: Apricot (#FFCC99) z pomarańczowym obramowaniem
 - ✅ Obramowanie jest pełne, nie wychodzi poza klocki i nie migocze
 - ✅ Początko stan: 5 kolumn, 15 bloków
-- ✅ Przycisk +: dodaje kolumny do maksimum 20 (210 bloków)
+- ✅ Przycisk +: dodaje kolumny
 - ✅ Przycisk -: usuwa kolumny do minimum 1 (1 blok)
 - ✅ Auto-zoom: prawidłowo dostosowuje widok
 - ✅ 3D rotacja: płynne obroty myszką
@@ -182,3 +182,10 @@ Refaktoryzacja Phase 1 - System konfiguracji i obramowanie krawędziowe:
 ## Kontakt / Uwagi
 
 Projekt wykonany z Three.js i Vite. Patrz komentarze w kodzie źródłowym.
+Liczby 20-99 sa budowane analogicznie:
+```javascript
+// Przyklad: 34 = 30 + 4
+const tensBlocks = createSolidBlocks(30, TENS_BASE, TENS_BORDER);
+const oneBlocks = getOneBlocksForNumber(4);
+return { blocks: [...tensBlocks, ...oneBlocks] };
+```

@@ -33,7 +33,7 @@ Dokument pomocniczy zawierający informacje o strukturze aplikacji, selektorach 
 - **controls.js** - Obsługa zdarzeń UI (klik +/-)
 
 ### System Kolumn (Phase 1)
-- **numberblockConfig.js** - Konfiguracja dla liczb 1-20
+- **numberblockConfig.js** - Konfiguracja dla liczb 1-99 (dziesiatki + jednosci)
   - `getNumberblockConfig(number)` → `{ number, displayName, blocks[], face }`
   - `getOneBlocksForNumber(digit)` → bloki dla jednostek
   - `decomposeNumber(number)` → `{ tens, ones }`
@@ -138,6 +138,17 @@ case 20:
 ```
 20 bloków piaskowych/apricot z pomarańczowym obramowaniem.
 
+#### Numbers 20-99 (Tens + Ones)
+Dziesiatki sa budowane z koloru bazowego powiazanego z cyfra dziesiatek
+(np. 30 bazuje na kolorze 3), a jednosci dodawane sa standardowo.
+```javascript
+const tens = Math.floor(number / 10);
+const ones = number % 10;
+const { baseColor, borderColor } = getTensColorsForDigit(tens);
+const tensBlocks = createSolidBlocks(tens * 10, baseColor, borderColor);
+const oneBlocks = ones > 0 ? getOneBlocksForNumber(ones) : [];
+```
+
 ## 🎬 Kluczowe Funkcje
 
 ### `createColumn(columnNumber, positionX)`
@@ -179,7 +190,7 @@ Auto-zoom kamery dostosowujący widok do liczby kolumn.
 ### Poruszanie się
 - **Obracanie:** Przeciąg myszą na canvas
 - **Zoom:** Scroll na canvas
-- **Dodaj kolumnę:** Klik na `#btn-plus` (limit max 20)
+- **Dodaj kolumnę:** Klik na `#btn-plus`
 - **Usuń kolumnę:** Klik na `#btn-minus` (limit min 1)
 
 ### Wyświetlane Informacje
