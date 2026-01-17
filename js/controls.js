@@ -51,7 +51,7 @@ export function setupControls(staircase, updateCallback, adjustCameraCallback) {
 function updateTotalDisplay(staircase, totalDisplay) {
   const n = staircase.getCurrentN();
   const total = staircase.getTotal();
-  totalDisplay.textContent = `${n} columns: ${total} blocks`;
+  totalDisplay.textContent = `${n} kolumn: ${total} klocków`;
 }
 
 /**

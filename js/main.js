@@ -21,5 +21,5 @@ setupControls(staircase, () => {
 // Start the animation loop
 animate(scene, camera, renderer, controls);
 
-console.log('Numberblocks Step Squad initialized!');
-console.log(`Starting with ${staircase.getCurrentN()} columns and ${staircase.getTotal()} blocks`);
+console.log('Numberblocks Step Squad zainicjalizowana!');
+console.log(`Uruchomienie z ${staircase.getCurrentN()} kolumnami i ${staircase.getTotal()} klockami`);

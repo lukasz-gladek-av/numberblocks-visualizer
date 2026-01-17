@@ -1,31 +1,34 @@
 /**
  * Numberblocks color scheme
- * Each number 1-10 has a unique color, then pattern repeats
+ * Maintains backwards compatibility while providing access to new config system
  */
 
-// Base colors for Numberblocks 1-10 (official colors)
+import { getNumberblockConfig, NUMBERBLOCK_BORDER_COLORS } from './numberblockConfig.js';
+
+// Base colors for Numberblocks 1-10 (vibrant, cartoon-style colors)
+// Kept for reference and backwards compatibility
 const BASE_COLORS = {
-  1: 0xde151d,    // Red
-  2: 0xe89223,    // Orange
-  3: 0xe6c40c,    // Yellow
-  4: 0x38b500,    // Green
-  5: 0x23b0db,    // Cyan/Blue
-  6: 0x4B0082,    // Indigo
+  1: 0xFF2E3B,    // Vibrant Red
+  2: 0xFF8C00,    // Vibrant Orange
+  3: 0xFFD700,    // Vibrant Yellow
+  4: 0x32CD32,    // Vibrant Green
+  5: 0x00BFFF,    // Vibrant Cyan
+  6: 0x7B68EE,    // Vibrant Indigo
   7: 'rainbow',   // Special rainbow handling (7 colors for 7 blocks)
-  8: 0xFF1493,    // Magenta
-  9: 0x808080,    // Grey
+  8: 0xFF69B4,    // Vibrant Magenta
+  9: 0xA9A9A9,    // Lighter Grey
   10: 0xFFFFFF,   // White
 };
 
-// Rainbow colors for column 7 - each block gets a different color
+// Rainbow colors for column 7 - each block gets a different color (vibrant)
 const RAINBOW_COLORS = [
-  0xFF0000,    // Red
-  0xFF6600,    // Orange
-  0xFFFF00,    // Yellow
-  0x00FF00,    // Green
-  0x0066FF,    // Blue
-  0x4B0082,    // Indigo
-  0x9900FF,    // Violet
+  0xFF2E3B,    // Vibrant Red
+  0xFF8C00,    // Vibrant Orange
+  0xFFD700,    // Vibrant Yellow
+  0x32CD32,    // Vibrant Green
+  0x00BFFF,    // Vibrant Cyan
+  0x7B68EE,    // Vibrant Indigo
+  0xFF69B4,    // Vibrant Violet/Magenta
 ];
 
 /**
@@ -69,3 +72,8 @@ export function isRainbowColumn(columnNumber) {
 
 export const NUMBERBLOCK_COLORS = BASE_COLORS;
 export const RAINBOW = RAINBOW_COLORS;
+
+/**
+ * Re-export new config system for centralized access
+ */
+export { getNumberblockConfig, NUMBERBLOCK_BORDER_COLORS };
