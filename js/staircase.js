@@ -79,8 +79,10 @@ export class Staircase {
       // Recursively set castShadow for all children
       column.traverse(child => {
         if (child instanceof THREE.Mesh) {
-          child.castShadow = true;
-          child.receiveShadow = true;
+          if (!child.userData.noShadow) {
+            child.castShadow = true;
+            child.receiveShadow = true;
+          }
         }
       });
 

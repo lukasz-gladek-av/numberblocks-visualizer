@@ -3,6 +3,69 @@ import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeom
 import { getColumnColor, isRainbowColumn } from './colors.js';
 import { getNumberblockConfig } from './numberblockConfig.js';
 
+const BLOCK_GEOMETRY = new RoundedBoxGeometry(0.9, 0.9, 0.9, 3, 0.08);
+const blockMaterialCache = new Map();
+const borderMaterialCache = new Map();
+const sideGeometryCache = new Map();
+
+const BLOCK_SIZE = 0.9;
+const GAP = 0.01;
+const BORDER_FRAME_THICKNESS = 0.06;
+const BORDER_CORNER_RADIUS = 0.03;
+const BORDER_CORNER_SEGMENTS = 4;
+const BORDER_TOP_BOTTOM_GEOMETRY = new RoundedBoxGeometry(
+  BLOCK_SIZE,
+  BORDER_FRAME_THICKNESS,
+  BLOCK_SIZE,
+  BORDER_CORNER_SEGMENTS,
+  BORDER_CORNER_RADIUS
+);
+
+function getBlockMaterial(color) {
+  const key = String(color);
+  if (!blockMaterialCache.has(key)) {
+    blockMaterialCache.set(key, new THREE.MeshStandardMaterial({
+      color: color,
+      roughness: 0.18,
+      metalness: 0.03,
+      emissive: color,
+      emissiveIntensity: 0.08,
+    }));
+  }
+  return blockMaterialCache.get(key);
+}
+
+function getBorderMaterial(color) {
+  const key = String(color);
+  if (!borderMaterialCache.has(key)) {
+    borderMaterialCache.set(key, new THREE.MeshStandardMaterial({
+      color: color,
+      transparent: false,
+      side: THREE.DoubleSide,
+      roughness: 0.3,
+      metalness: 0.0,
+      polygonOffset: true,
+      polygonOffsetFactor: -1,
+      polygonOffsetUnits: -1,
+    }));
+  }
+  return borderMaterialCache.get(key);
+}
+
+function getSideGeometry(groupSize) {
+  if (!sideGeometryCache.has(groupSize)) {
+    const groupHeight = groupSize * (BLOCK_SIZE + GAP) - GAP;
+    sideGeometryCache.set(groupSize, new RoundedBoxGeometry(
+      BORDER_FRAME_THICKNESS,
+      groupHeight,
+      BLOCK_SIZE,
+      BORDER_CORNER_SEGMENTS,
+      BORDER_CORNER_RADIUS
+    ));
+  }
+  return sideGeometryCache.get(groupSize);
+}
+
 /**
  * Create a single block for the staircase with rounded corners
  * Note: Borders are handled at the group level in createColumn()
@@ -10,18 +73,7 @@ import { getNumberblockConfig } from './numberblockConfig.js';
  * @returns {THREE.Mesh} - The block mesh with rounded corners
  */
 export function createBlock(color) {
-  // Create a perfectly rounded box geometry
-  const geometry = new RoundedBoxGeometry(0.9, 0.9, 0.9, 3, 0.08);
-
-  const material = new THREE.MeshStandardMaterial({
-    color: color,
-    roughness: 0.18,
-    metalness: 0.03,
-    emissive: color,
-    emissiveIntensity: 0.08,
-  });
-
-  const block = new THREE.Mesh(geometry, material);
+  const block = new THREE.Mesh(BLOCK_GEOMETRY, getBlockMaterial(color));
   return block;
 }
 
@@ -50,9 +102,6 @@ export function createColumn(columnNumber, positionX = 0) {
     }
   }
 
-  const blockSize = 0.9;
-  const gap = 0.01; // Minimal gap, blocks can nearly touch
-
   // Create blocks from config
   blocks.forEach((blockConfig, i) => {
     const block = createBlock(blockConfig.color);
@@ -62,7 +111,7 @@ export function createColumn(columnNumber, positionX = 0) {
 
     // Stack blocks vertically - can touch now due to rounded edges
     // Position so blocks sit on ground (y=0) and stack upward
-    const yPosition = i * (blockSize + gap) + blockSize / 2;
+    const yPosition = i * (BLOCK_SIZE + GAP) + BLOCK_SIZE / 2;
 
     block.position.y = yPosition;
     column.add(block);
@@ -85,54 +134,43 @@ export function createColumn(columnNumber, positionX = 0) {
     // If this group has a borderColor, add a border around the entire group
     if (currentBlock.borderColor !== null && currentBlock.borderColor !== undefined) {
       const groupSize = groupEnd - i + 1;
-      const groupHeight = groupSize * (blockSize + gap) - gap;
+      const groupHeight = groupSize * (BLOCK_SIZE + GAP) - GAP;
 
       // Position at the center of the group
-      const groupStartY = i * (blockSize + gap);
+      const groupStartY = i * (BLOCK_SIZE + GAP);
       const groupCenterY = groupStartY + groupHeight / 2;
 
-      const boxSize = 0.9;
-      const halfWidth = boxSize / 2;
+      const boxSize = BLOCK_SIZE;
+      const halfWidth = BLOCK_SIZE / 2;
       const halfHeight = groupHeight / 2;
-      const halfDepth = boxSize / 2;
-      const frameThickness = 0.06;
+      const frameThickness = BORDER_FRAME_THICKNESS;
 
-      // Solid walls for the border: sides + top/bottom (no front/back planes).
-      const borderMaterial = new THREE.MeshStandardMaterial({
-        color: currentBlock.borderColor,
-        transparent: false,
-        side: THREE.DoubleSide,
-        roughness: 0.3,
-        metalness: 0.0,
-        polygonOffset: true,
-        polygonOffsetFactor: -1,
-        polygonOffsetUnits: -1,
-      });
-
-      const cornerRadius = 0.03;
-      const cornerSegments = 4;
-      const sideGeometry = new RoundedBoxGeometry(frameThickness, groupHeight, boxSize, cornerSegments, cornerRadius);
-      const topBottomGeometry = new RoundedBoxGeometry(boxSize, frameThickness, boxSize, cornerSegments, cornerRadius);
+      const borderMaterial = getBorderMaterial(currentBlock.borderColor);
+      const sideGeometry = getSideGeometry(groupSize);
 
       const leftSide = new THREE.Mesh(sideGeometry, borderMaterial);
       leftSide.position.set(-(halfWidth - frameThickness / 2), groupCenterY, 0);
       leftSide.castShadow = false;
       leftSide.receiveShadow = false;
+      leftSide.userData.noShadow = true;
 
       const rightSide = new THREE.Mesh(sideGeometry, borderMaterial);
       rightSide.position.set(halfWidth - frameThickness / 2, groupCenterY, 0);
       rightSide.castShadow = false;
       rightSide.receiveShadow = false;
+      rightSide.userData.noShadow = true;
 
-      const topSide = new THREE.Mesh(topBottomGeometry, borderMaterial);
+      const topSide = new THREE.Mesh(BORDER_TOP_BOTTOM_GEOMETRY, borderMaterial);
       topSide.position.set(0, groupCenterY + halfHeight - frameThickness / 2, 0);
       topSide.castShadow = false;
       topSide.receiveShadow = false;
+      topSide.userData.noShadow = true;
 
-      const bottomSide = new THREE.Mesh(topBottomGeometry, borderMaterial);
+      const bottomSide = new THREE.Mesh(BORDER_TOP_BOTTOM_GEOMETRY, borderMaterial);
       bottomSide.position.set(0, groupCenterY - halfHeight + frameThickness / 2, 0);
       bottomSide.castShadow = false;
       bottomSide.receiveShadow = false;
+      bottomSide.userData.noShadow = true;
 
       column.add(leftSide, rightSide, topSide, bottomSide);
     }
@@ -144,7 +182,7 @@ export function createColumn(columnNumber, positionX = 0) {
   column.position.x = positionX;
 
   // Center the column vertically (so it grows upward from ground)
-  const totalHeight = columnNumber * (blockSize + gap) - gap;
+  const totalHeight = columnNumber * (BLOCK_SIZE + GAP) - GAP;
   column.position.y = 0; // Bottom aligned at ground level
 
   return column;

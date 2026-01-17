@@ -130,10 +130,15 @@ Obramowanie tworzy się z cienkich brył z lekkim zaokrągleniem (RoundedBoxGeom
 - Bloki w grupie z obramowaniem są minimalnie pomniejszane (0.99)
 - Cienie dla ramki są wyłączone, aby uniknąć artefaktów
 
-### 4. Pozycjonowanie bloków
+### 4. Wydajność (Cache geometrii i materiałów)
+- Geometrie bloków i obramowań są współdzielone między kolumnami
+- Materiały są cache'owane per kolor, co ogranicza liczbę alokacji
+- Elementy obramowań nie rzucają cieni, by zmniejszyć koszt renderingu
+
+### 5. Pozycjonowanie bloków
 Wszystkie bloki są prawidłowo pozycjonowane na ziemi (y=0). Wysokość bloku wynosi 0.9 jednostki, z 0.01 jednostkami przerwy między blokami.
 
-### 5. Auto-zoom
+### 6. Auto-zoom
 Funkcja `adjustCameraForColumns()` w `scene.js` dostosowuje pozycję kamery na podstawie liczby kolumn, aby zawsze wszystkie kolumny były widoczne.
 
 ## Możliwości rozszerzenia (todo)

@@ -165,6 +165,7 @@ createColumn(columnNumber, positionX = 0) → THREE.Group
 4. Grupuje kolejne bloki o tym samym `color` i `borderColor`
 5. Dla grup z `borderColor`: tworzy obramowanie z RoundedBoxGeometry (boki + gora/dol)
 6. Pozycjonuje kolumnę na x = `positionX`
+7. Współdzieli geometrie i materiały przez cache, aby ograniczyć alokacje
 
 **Obramowanie (RoundedBoxGeometry):**
 - Boki + gora/dol grupy blokow (bez frontu/tylu)
