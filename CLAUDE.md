@@ -43,8 +43,8 @@ Dokument pomocniczy zawierający informacje o strukturze aplikacji, selektorach 
   - `createBlock(color)` → `THREE.Mesh` - pojedynczy blok z zaokrąglonymi krawędziami
   - `createColumn(columnNumber, positionX)` → `THREE.Group` - kolumna z obramowaniem
     - Grupuje kolejne bloki o tym samym kolorze i borderColor
-    - Tworzy obramowanie (LineSegments) wokół grup
-    - Obramowanie: 12 krawędzi (4 dno + 4 góra + 4 pionowe)
+    - Tworzy obramowanie z cienkich brył (RoundedBoxGeometry) wokół grup
+    - Obramowanie: boki + gora/dol (bez frontu/tylu), lekko zaokraglone
 
 - **colors.js** - System kolorów
   - Re-eksportuje `getNumberblockConfig` z `numberblockConfig.js`
@@ -152,14 +152,14 @@ createColumn(columnNumber, positionX = 0) → THREE.Group
 2. Iteruje przez `config.blocks[]`
 3. Tworzy każdy blok za pomocą `createBlock(color)`
 4. Grupuje kolejne bloki o tym samym `color` i `borderColor`
-5. Dla grup z `borderColor`: tworzy obramowanie (12 krawędzi LineSegments)
+5. Dla grup z `borderColor`: tworzy obramowanie z RoundedBoxGeometry (boki + gora/dol)
 6. Pozycjonuje kolumnę na x = `positionX`
 
-**Obramowanie (LineSegments):**
-- 4 krawędzie na dnie grupy bloków
-- 4 krawędzie na górze grupy bloków
-- 4 krawędzie pionowe (łączące dno i górę)
-- Brak przechodzenia przez bloki - czysty efekt wizualny
+**Obramowanie (RoundedBoxGeometry):**
+- Boki + gora/dol grupy blokow (bez frontu/tylu)
+- Grubosc ramki: 0.06, wsunieta do srodka (nie wychodzi poza klocki)
+- Bloki w grupie z obramowaniem sa minimalnie pomniejszane (0.99)
+- Cienie dla ramki sa wylaczone, aby uniknac artefaktow
 
 ### `adjustCameraForColumns(columnCount)`
 Źródło: `js/scene.js`
@@ -231,7 +231,7 @@ Plik: `js/faces.js`
 ### Block Properties
 - **blockSize:** 0.9 jednostek
 - **gap:** 0.01 jednostek (między blokami)
-- **frameThickness:** (LineSegments, zależy od renderowania)
+- **frameThickness:** 0.06 (RoundedBoxGeometry dla ramki)
 
 ### Material
 Bloki: `THREE.MeshStandardMaterial`

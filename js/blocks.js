@@ -56,6 +56,9 @@ export function createColumn(columnNumber, positionX = 0) {
   // Create blocks from config
   blocks.forEach((blockConfig, i) => {
     const block = createBlock(blockConfig.color);
+    if (blockConfig.borderColor !== null && blockConfig.borderColor !== undefined) {
+      block.scale.set(0.99, 0.99, 0.99);
+    }
 
     // Stack blocks vertically - can touch now due to rounded edges
     // Position so blocks sit on ground (y=0) and stack upward
@@ -88,58 +91,50 @@ export function createColumn(columnNumber, positionX = 0) {
       const groupStartY = i * (blockSize + gap);
       const groupCenterY = groupStartY + groupHeight / 2;
 
-      const lineWidth = 3; // Line width in pixels
       const boxSize = 0.9;
       const halfWidth = boxSize / 2;
       const halfHeight = groupHeight / 2;
       const halfDepth = boxSize / 2;
+      const frameThickness = 0.06;
 
-      // Create line-based border using 12 edges of a box
-      const borderPoints = [
-        // Bottom face (4 edges)
-        new THREE.Vector3(-halfWidth, groupCenterY - halfHeight, -halfDepth),
-        new THREE.Vector3(halfWidth, groupCenterY - halfHeight, -halfDepth),
-        new THREE.Vector3(halfWidth, groupCenterY - halfHeight, -halfDepth),
-        new THREE.Vector3(halfWidth, groupCenterY - halfHeight, halfDepth),
-        new THREE.Vector3(halfWidth, groupCenterY - halfHeight, halfDepth),
-        new THREE.Vector3(-halfWidth, groupCenterY - halfHeight, halfDepth),
-        new THREE.Vector3(-halfWidth, groupCenterY - halfHeight, halfDepth),
-        new THREE.Vector3(-halfWidth, groupCenterY - halfHeight, -halfDepth),
-
-        // Top face (4 edges)
-        new THREE.Vector3(-halfWidth, groupCenterY + halfHeight, -halfDepth),
-        new THREE.Vector3(halfWidth, groupCenterY + halfHeight, -halfDepth),
-        new THREE.Vector3(halfWidth, groupCenterY + halfHeight, -halfDepth),
-        new THREE.Vector3(halfWidth, groupCenterY + halfHeight, halfDepth),
-        new THREE.Vector3(halfWidth, groupCenterY + halfHeight, halfDepth),
-        new THREE.Vector3(-halfWidth, groupCenterY + halfHeight, halfDepth),
-        new THREE.Vector3(-halfWidth, groupCenterY + halfHeight, halfDepth),
-        new THREE.Vector3(-halfWidth, groupCenterY + halfHeight, -halfDepth),
-
-        // Vertical edges (4 edges)
-        new THREE.Vector3(-halfWidth, groupCenterY - halfHeight, -halfDepth),
-        new THREE.Vector3(-halfWidth, groupCenterY + halfHeight, -halfDepth),
-        new THREE.Vector3(halfWidth, groupCenterY - halfHeight, -halfDepth),
-        new THREE.Vector3(halfWidth, groupCenterY + halfHeight, -halfDepth),
-        new THREE.Vector3(halfWidth, groupCenterY - halfHeight, halfDepth),
-        new THREE.Vector3(halfWidth, groupCenterY + halfHeight, halfDepth),
-        new THREE.Vector3(-halfWidth, groupCenterY - halfHeight, halfDepth),
-        new THREE.Vector3(-halfWidth, groupCenterY + halfHeight, halfDepth),
-      ];
-
-      const borderGeometry = new THREE.BufferGeometry();
-      borderGeometry.setAttribute('position', new THREE.BufferAttribute(
-        new Float32Array(borderPoints.flatMap(p => [p.x, p.y, p.z])),
-        3
-      ));
-
-      const lineMaterial = new THREE.LineBasicMaterial({
+      // Solid walls for the border: sides + top/bottom (no front/back planes).
+      const borderMaterial = new THREE.MeshStandardMaterial({
         color: currentBlock.borderColor,
-        linewidth: lineWidth,
+        transparent: false,
+        side: THREE.DoubleSide,
+        roughness: 0.3,
+        metalness: 0.0,
+        polygonOffset: true,
+        polygonOffsetFactor: -1,
+        polygonOffsetUnits: -1,
       });
 
-      const borderLines = new THREE.LineSegments(borderGeometry, lineMaterial);
-      column.add(borderLines);
+      const cornerRadius = 0.03;
+      const cornerSegments = 4;
+      const sideGeometry = new RoundedBoxGeometry(frameThickness, groupHeight, boxSize, cornerSegments, cornerRadius);
+      const topBottomGeometry = new RoundedBoxGeometry(boxSize, frameThickness, boxSize, cornerSegments, cornerRadius);
+
+      const leftSide = new THREE.Mesh(sideGeometry, borderMaterial);
+      leftSide.position.set(-(halfWidth - frameThickness / 2), groupCenterY, 0);
+      leftSide.castShadow = false;
+      leftSide.receiveShadow = false;
+
+      const rightSide = new THREE.Mesh(sideGeometry, borderMaterial);
+      rightSide.position.set(halfWidth - frameThickness / 2, groupCenterY, 0);
+      rightSide.castShadow = false;
+      rightSide.receiveShadow = false;
+
+      const topSide = new THREE.Mesh(topBottomGeometry, borderMaterial);
+      topSide.position.set(0, groupCenterY + halfHeight - frameThickness / 2, 0);
+      topSide.castShadow = false;
+      topSide.receiveShadow = false;
+
+      const bottomSide = new THREE.Mesh(topBottomGeometry, borderMaterial);
+      bottomSide.position.set(0, groupCenterY - halfHeight + frameThickness / 2, 0);
+      bottomSide.castShadow = false;
+      bottomSide.receiveShadow = false;
+
+      column.add(leftSide, rightSide, topSide, bottomSide);
     }
 
     i = groupEnd + 1;

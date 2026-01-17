@@ -123,12 +123,12 @@ const oneBlocks = getOneBlocksForNumber(4); // Green blocks
 return { blocks: [...tenBlocks, ...oneBlocks] };
 ```
 
-### 3. Obramowanie Krawędziowe (LineSegments)
-Zamiast solidnych pudełek, obramowanie tworzy się z 12 krawędzi (LineSegments w THREE.js):
-- 4 krawędzie na dnie grupy
-- 4 krawędzie na górze grupy
-- 4 krawędzie pionowe
-- Brak przechodzenia przez bloki - czysty efekt wizualny
+### 3. Obramowanie (Solidne Ściany)
+Obramowanie tworzy się z cienkich brył z lekkim zaokrągleniem (RoundedBoxGeometry):
+- Boki + góra/dół grupy (bez frontu/tyłu)
+- Grubość ramki: 0.06, wsunięta do środka (nie wychodzi poza klocki)
+- Bloki w grupie z obramowaniem są minimalnie pomniejszane (0.99)
+- Cienie dla ramki są wyłączone, aby uniknąć artefaktów
 
 ### 4. Pozycjonowanie bloków
 Wszystkie bloki są prawidłowo pozycjonowane na ziemi (y=0). Wysokość bloku wynosi 0.9 jednostki, z 0.01 jednostkami przerwy między blokami.
@@ -158,7 +158,7 @@ Refaktoryzacja Phase 1 - System konfiguracji i obramowanie krawędziowe:
 - Nowy system: `numberblockConfig.js` z pełnymi definicjami liczb 1-20
 - Obsługa specjalnych liczb: 7 (rainbow), 9 (grey gradient), 10 (white+red), 20 (apricot+orange)
 - Rozkład liczb nastoletnih: 11-19 = 10 + jednostki
-- Obramowanie zmienione z meshów na LineSegments (12 krawędzi, bez przechodzenia)
+- Obramowanie zmienione na solidne ściany z RoundedBoxGeometry (boki + góra/dół)
 - Pliki dodane: `numberblockConfig.js`, `faces.js` (placeholder Phase 2)
 
 ## Testy
@@ -170,7 +170,7 @@ Refaktoryzacja Phase 1 - System konfiguracji i obramowanie krawędziowe:
 - ✅ Liczba 10: White (#FFFFFF) z czerwonym obramowaniem (12 krawędzi)
 - ✅ Liczba 14: 10 białych + 4 zielone (rozkład place-value)
 - ✅ Liczba 20: Apricot (#FFCC99) z pomarańczowym obramowaniem
-- ✅ Obramowanie nie przenika przez bloki - czysty efekt wizualny
+- ✅ Obramowanie jest pełne, nie wychodzi poza klocki i nie migocze
 - ✅ Początko stan: 5 kolumn, 15 bloków
 - ✅ Przycisk +: dodaje kolumny do maksimum 20 (210 bloków)
 - ✅ Przycisk -: usuwa kolumny do minimum 1 (1 blok)

@@ -63,6 +63,8 @@ export function initScene() {
   directionalLight.shadow.camera.bottom = -40;
   directionalLight.shadow.camera.near = 0.1;
   directionalLight.shadow.camera.far = 100;
+  directionalLight.shadow.bias = -0.0006;
+  directionalLight.shadow.normalBias = 0.02;
   scene.add(directionalLight);
 
   // Ground plane with gradient texture
