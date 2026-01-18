@@ -7,10 +7,17 @@ export function setupControls(staircase, updateCallback, adjustCameraCallback) {
   // Button elements
   const btnPlus = document.getElementById('btn-plus');
   const btnMinus = document.getElementById('btn-minus');
+  const btnSquare = document.getElementById('btn-square');
   const totalDisplay = document.getElementById('total-display');
 
   // Initialize total display
   updateTotalDisplay(staircase, totalDisplay);
+  const isSquareMode = staircase.getSquareMode();
+  btnSquare.textContent = isSquareMode ? 'Schody' : 'Kwadrat';
+  btnSquare.setAttribute(
+    'aria-label',
+    isSquareMode ? 'Pokaż schody' : 'Uzupełnij do kwadratu'
+  );
 
   // Plus button - add column
   btnPlus.addEventListener('click', () => {
@@ -36,11 +43,26 @@ export function setupControls(staircase, updateCallback, adjustCameraCallback) {
     }
   });
 
+  btnSquare.addEventListener('click', () => {
+    const isSquareMode = staircase.toggleSquareMode();
+    btnSquare.textContent = isSquareMode ? 'Schody' : 'Kwadrat';
+    btnSquare.setAttribute(
+      'aria-label',
+      isSquareMode ? 'Pokaż schody' : 'Uzupełnij do kwadratu'
+    );
+    updateTotalDisplay(staircase, totalDisplay);
+    if (adjustCameraCallback) {
+      adjustCameraCallback(staircase.getCurrentN());
+    }
+    updateCallback?.();
+  });
+
   // Touch-friendly additions
   addTouchFeedback(btnPlus);
   addTouchFeedback(btnMinus);
+  addTouchFeedback(btnSquare);
 
-  return { btnPlus, btnMinus, totalDisplay };
+  return { btnPlus, btnMinus, btnSquare, totalDisplay };
 }
 
 /**
@@ -51,7 +73,13 @@ export function setupControls(staircase, updateCallback, adjustCameraCallback) {
 function updateTotalDisplay(staircase, totalDisplay) {
   const n = staircase.getCurrentN();
   const total = staircase.getTotal();
-  totalDisplay.textContent = `${n} kolumn: ${total} klocków`;
+  if (staircase.getSquareMode()) {
+    const squareFill = staircase.getSquareFillTotal();
+    const squareTotal = staircase.getSquareTotal();
+    totalDisplay.textContent = `${total} + ${squareFill} = ${squareTotal}`;
+  } else {
+    totalDisplay.textContent = `${n} kolumn: ${total} klocków`;
+  }
 }
 
 /**

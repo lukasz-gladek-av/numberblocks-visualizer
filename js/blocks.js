@@ -78,29 +78,40 @@ export function createBlock(color) {
 }
 
 /**
- * Create a column of blocks using the new config system
- * @param {number} columnNumber - The column number (1-based, determines blocks)
- * @param {number} positionX - X position for the column
- * @returns {THREE.Group} - Group containing all blocks in the column
+ * Get block configs for a number with fallback colors
+ * @param {number} number - The number to create blocks for
+ * @returns {Array} Block configuration objects
  */
-export function createColumn(columnNumber, positionX = 0) {
-  const column = new THREE.Group();
-
-  // For backwards compatibility, try new system first, fall back to old
+export function getBlocksForNumber(number) {
   let blocks = [];
   try {
-    const config = getNumberblockConfig(columnNumber);
+    const config = getNumberblockConfig(number);
     blocks = config.blocks;
   } catch (error) {
     // Fallback to old behavior for numbers outside 1-20
-    console.warn(`Number ${columnNumber} out of range, using legacy color system`);
-    for (let i = 0; i < columnNumber; i++) {
-      const color = isRainbowColumn(columnNumber)
-        ? getColumnColor(columnNumber, i)
-        : getColumnColor(columnNumber);
+    console.warn(`Number ${number} out of range, using legacy color system`);
+    for (let i = 0; i < number; i++) {
+      const color = isRainbowColumn(number)
+        ? getColumnColor(number, i)
+        : getColumnColor(number);
       blocks.push({ color, borderColor: null, blockType: 'one' });
     }
   }
+  return blocks;
+}
+
+/**
+ * Create a column of blocks using the new config system
+ * @param {number} columnNumber - The column number (1-based, determines blocks)
+ * @param {number} positionX - X position for the column
+ * @param {Array} extraBlocks - Additional block configs to stack on top
+ * @returns {THREE.Group} - Group containing all blocks in the column
+ */
+export function createColumn(columnNumber, positionX = 0, extraBlocks = []) {
+  const column = new THREE.Group();
+
+  const baseBlocks = getBlocksForNumber(columnNumber);
+  const blocks = extraBlocks.length > 0 ? [...baseBlocks, ...extraBlocks] : baseBlocks;
 
   // Create blocks from config
   blocks.forEach((blockConfig, i) => {
@@ -181,8 +192,7 @@ export function createColumn(columnNumber, positionX = 0) {
   // Position the column horizontally
   column.position.x = positionX;
 
-  // Center the column vertically (so it grows upward from ground)
-  const totalHeight = columnNumber * (BLOCK_SIZE + GAP) - GAP;
+  column.userData.blockCount = blocks.length;
   column.position.y = 0; // Bottom aligned at ground level
 
   return column;

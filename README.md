@@ -5,13 +5,14 @@ Interaktywna edukacyjna aplikacja 3D pokazująca "step squad" z Numberblocks - s
 ## Funkcjonalności
 
 ### Core
-- ✅ Wizualizacja 3D schodów (N kolumn, każda z N blokami)
+- ✅ Wizualizacja 3D schodów (N kolumn, od 1 do N bloków)
 - ✅ Przycisk + dodawania kolumn
 - ✅ Przycisk - odejmowania kolumn (min 1)
+- ✅ Przycisk Kwadrat/Schody: uzupełnianie do N × N
 - ✅ Auto-zoom dostosowujący widok do liczby kolumn
 - ✅ 3D rotacja myszką (OrbitControls)
-- ✅ Liczby nad kolumnami pokazujące ilość bloków
-- ✅ Wyświetlacz sumy bloków: N × (N+1) / 2
+- ✅ Liczby nad kolumnami (1..N)
+- ✅ Wyświetlacz sumy bloków: N × (N+1) / 2 (tryb kwadratu pokazuje A + B = C)
 - ✅ Responsywny UI na mobile i desktop
 
 ### Kolory i Obramowanie (Phase 1 - 2026)
@@ -147,7 +148,7 @@ Funkcja `adjustCameraForColumns()` w `scene.js` dostosowuje pozycję kamery na p
 - [ ] Dźwięki przy kliknięciu
 - [ ] Tryb demonstracyjny pokazujący wzór (1+2+3+...=suma)
 - [ ] Export do PNG
-- [ ] Różne układy (kwadrat, trójkąt)
+- [ ] Różne układy (trójkąt, inne kształty)
 - [ ] Ciemny motyw
 - [ ] Różne poziomy trudności/zakresy liczb
 
@@ -179,6 +180,7 @@ Refaktoryzacja Phase 1 - System konfiguracji i obramowanie krawędziowe:
 - ✅ Początko stan: 5 kolumn, 15 bloków
 - ✅ Przycisk +: dodaje kolumny
 - ✅ Przycisk -: usuwa kolumny do minimum 1 (1 blok)
+- ✅ Przycisk Kwadrat: uzupełnia schody do kwadratu, ponownie przywraca schody
 - ✅ Auto-zoom: prawidłowo dostosowuje widok
 - ✅ 3D rotacja: płynne obroty myszką
 - ✅ Etykiety: bez duplikatów

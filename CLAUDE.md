@@ -11,17 +11,19 @@ Dokument pomocniczy zawierający informacje o strukturze aplikacji, selektorach 
 <div class="container">
   <div id="total-display" class="total-display">5 kolumn: 15 klocków</div>
   <div class="controls">
-    <button id="btn-plus" class="btn btn-plus" aria-label="Dodaj kolumnę">+</button>
     <button id="btn-minus" class="btn btn-minus" aria-label="Usuń kolumnę">−</button>
+    <button id="btn-square" class="btn btn-square" aria-label="Uzupełnij do kwadratu">Kwadrat</button>
+    <button id="btn-plus" class="btn btn-plus" aria-label="Dodaj kolumnę">+</button>
   </div>
 </div>
 ```
 
 ### Kluczowe Selektory
 - `#threejs-canvas` - Główna scena 3D (Three.js renderer)
-- `#total-display` - Wyświetlacz suma: "X kolumn: Y klocków"
+- `#total-display` - Wyświetlacz suma: "X kolumn: Y klocków" lub "Y + K = N²"
 - `#btn-plus` (`.btn-plus`) - Przycisk dodaj kolumnę
 - `#btn-minus` (`.btn-minus`) - Przycisk usuń kolumnę
+- `#btn-square` (`.btn-square`) - Przycisk Kwadrat/Schody
 - `.controls` - Kontener przycisków
 
 ## 📁 Struktura Plików JS
@@ -41,7 +43,8 @@ Dokument pomocniczy zawierający informacje o strukturze aplikacji, selektorach 
 
 - **blocks.js** - Tworzenie bloków i kolumn
   - `createBlock(color)` → `THREE.Mesh` - pojedynczy blok z zaokrąglonymi krawędziami
-  - `createColumn(columnNumber, positionX)` → `THREE.Group` - kolumna z obramowaniem
+  - `getBlocksForNumber(number)` → konfiguracja bloków z fallbackiem kolorów
+  - `createColumn(columnNumber, positionX, extraBlocks)` → `THREE.Group` - kolumna z obramowaniem
     - Grupuje kolejne bloki o tym samym kolorze i borderColor
     - Tworzy obramowanie z cienkich brył (RoundedBoxGeometry) wokół grup
     - Obramowanie: boki + gora/dol (bez frontu/tylu), lekko zaokraglone
@@ -151,11 +154,11 @@ const oneBlocks = ones > 0 ? getOneBlocksForNumber(ones) : [];
 
 ## 🎬 Kluczowe Funkcje
 
-### `createColumn(columnNumber, positionX)`
+### `createColumn(columnNumber, positionX, extraBlocks)`
 Źródło: `js/blocks.js`
 
 ```javascript
-createColumn(columnNumber, positionX = 0) → THREE.Group
+createColumn(columnNumber, positionX = 0, extraBlocks = []) → THREE.Group
 ```
 
 **Proces:**
@@ -184,6 +187,7 @@ Auto-zoom kamery dostosowujący widok do liczby kolumn.
 ```javascript
 #btn-plus.click() → staircase.addColumn()
 #btn-minus.click() → staircase.removeColumn()
+#btn-square.click() → staircase.toggleSquareMode()
 ```
 
 ## 🔄 Interakcja z Aplikacją
@@ -193,11 +197,12 @@ Auto-zoom kamery dostosowujący widok do liczby kolumn.
 - **Zoom:** Scroll na canvas
 - **Dodaj kolumnę:** Klik na `#btn-plus`
 - **Usuń kolumnę:** Klik na `#btn-minus` (limit min 1)
+- **Kwadrat/Schody:** Klik na `#btn-square` (uzupełnia do N × N)
 
 ### Wyświetlane Informacje
 - Liczby nad kolumnami (1, 2, 3, ... N)
-- Suma bloków w `#total-display`: "N kolumn: M klocków"
-- Formula: M = N × (N + 1) / 2
+- Suma bloków w `#total-display`: "N kolumn: M klocków" lub "M + K = N²"
+- Formula: M = N × (N + 1) / 2 (tryb kwadratu: M + K = N²)
 
 ## 📊 Dane Kolumn (Config Object)
 

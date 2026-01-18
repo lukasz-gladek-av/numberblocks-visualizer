@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js';
 import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js';
-import { createColumn } from './blocks.js';
+import { createColumn, getBlocksForNumber } from './blocks.js';
 
 /**
  * Staircase class - manages the entire step squad structure
@@ -16,6 +16,7 @@ export class Staircase {
     this.scene.add(this.group);
     this.scene.add(this.labelGroup);
     this.font = null;
+    this.isSquareMode = false;
 
     // Load font for 3D text
     this.loadFont();
@@ -52,7 +53,8 @@ export class Staircase {
 
     for (let i = 1; i <= this.currentN; i++) {
       const positionX = startX + (i - 1) * columnSpacing;
-      this.addColumnLabel(i, positionX);
+      const blockCount = this.getColumnBlockCount(i);
+      this.addColumnLabel(i, positionX, blockCount);
     }
   }
 
@@ -72,7 +74,8 @@ export class Staircase {
 
     for (let i = 1; i <= n; i++) {
       const positionX = startX + (i - 1) * columnSpacing;
-      const column = createColumn(i, positionX);
+      const extraBlocks = this.isSquareMode ? this.getSquareFillBlocks(n, i) : [];
+      const column = createColumn(i, positionX, extraBlocks);
       column.castShadow = true;
       column.receiveShadow = true;
 
@@ -102,8 +105,9 @@ export class Staircase {
    * Add a 3D numerical label above each column
    * @param {number} columnNumber - The column number
    * @param {number} positionX - X position of the column
+   * @param {number} blockCount - The number of blocks in the column
    */
-  addColumnLabel(columnNumber, positionX) {
+  addColumnLabel(columnNumber, positionX, blockCount = columnNumber) {
     // Create 3D text geometry
     const geometry = new TextGeometry(columnNumber.toString(), {
       font: this.font,
@@ -132,9 +136,10 @@ export class Staircase {
 
     // Position above the column at fixed distance from top
     const blockSize = 0.9;
-    const maxHeight = columnNumber * 0.95; // Height of the tallest block in the column
-    const topOfColumn = maxHeight + blockSize / 2; // Top edge of the highest block
-    const labelOffset = 0.18; // Fixed distance above the top of column
+    const gap = 0.01;
+    const safeBlockCount = Math.max(blockCount, 1);
+    const topOfColumn = (safeBlockCount - 1) * (blockSize + gap) + blockSize;
+    const labelOffset = 0.18;
     labelMesh.position.set(positionX, topOfColumn + labelOffset, 0);
 
     this.labelGroup.add(labelMesh);
@@ -174,5 +179,39 @@ export class Staircase {
    */
   getCurrentN() {
     return this.currentN;
+  }
+
+  getSquareMode() {
+    return this.isSquareMode;
+  }
+
+  toggleSquareMode() {
+    this.isSquareMode = !this.isSquareMode;
+    this.build(this.currentN);
+    return this.isSquareMode;
+  }
+
+  getSquareTotal() {
+    return this.currentN * this.currentN;
+  }
+
+  getSquareFillTotal() {
+    return this.getSquareTotal() - this.getTotal();
+  }
+
+  getColumnBlockCount(columnNumber) {
+    const column = this.columns[columnNumber - 1];
+    if (!column) {
+      return columnNumber;
+    }
+    return column.userData.blockCount || columnNumber;
+  }
+
+  getSquareFillBlocks(totalColumns, columnNumber) {
+    const extraCount = totalColumns - columnNumber;
+    if (extraCount <= 0) {
+      return [];
+    }
+    return getBlocksForNumber(extraCount);
   }
 }
