@@ -1,6 +1,8 @@
 # Numberblocks Step Squad 3D Visualization
 [![Build Pages](https://github.com/lukasz-gladek-av/numberblocks-visualizer/actions/workflows/build-pages.yml/badge.svg)](https://github.com/lukasz-gladek-av/numberblocks-visualizer/actions/workflows/build-pages.yml)
 
+Live demo: https://lukasz-gladek-av.github.io/numberblocks-visualizer/
+
 Interaktywna edukacyjna aplikacja 3D pokazująca "step squad" z Numberblocks - schody złożone z kolorowych klocków, gdzie dla liczby N wyświetlamy kolumny od 1 do N bloków.
 
 ## Funkcjonalności
