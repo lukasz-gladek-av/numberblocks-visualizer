@@ -1,4 +1,5 @@
 # Numberblocks Step Squad 3D Visualization
+[![Build Pages](https://github.com/lukasz-gladek-av/numberblocks-visualizer/actions/workflows/build-pages.yml/badge.svg)](https://github.com/lukasz-gladek-av/numberblocks-visualizer/actions/workflows/build-pages.yml)
 
 Interaktywna edukacyjna aplikacja 3D pokazująca "step squad" z Numberblocks - schody złożone z kolorowych klocków, gdzie dla liczby N wyświetlamy kolumny od 1 do N bloków.
 
@@ -64,6 +65,16 @@ npm run dev
 ```
 
 Aplikacja będzie dostępna na `http://localhost:5173/`
+
+## GitHub Pages (ważne)
+
+Przed każdym commitem, który ma trafić na Pages, uruchom build i dodaj wygenerowany katalog:
+
+```bash
+npm run build
+```
+
+Commit powinien zawierać zaktualizowany `docs/` (Pages korzysta z `master:/docs`).
 
 ## Build do produkcji
 ```bash
