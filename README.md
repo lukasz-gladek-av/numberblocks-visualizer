@@ -11,7 +11,7 @@ Interaktywna edukacyjna aplikacja 3D pokazująca "step squad" z Numberblocks - s
 - ✅ Wizualizacja 3D schodów (N kolumn, od 1 do N bloków)
 - ✅ Przycisk + dodawania kolumn
 - ✅ Przycisk - odejmowania kolumn (min 1)
-- ✅ Przycisk trybu: Schody → Kwadraty → Sześciany (N × N × N)
+- ✅ Przycisk trybu: Schody → Kwadraty → Sześciany → Piramida (1-2-...-N-...-2-1)
 - ✅ Auto-zoom dostosowujący widok do liczby kolumn
 - ✅ 3D rotacja myszką (OrbitControls)
 - ✅ Liczby nad kolumnami (1..N)

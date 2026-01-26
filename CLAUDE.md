@@ -16,6 +16,7 @@ Dokument pomocniczy zawierający informacje o strukturze aplikacji, selektorach 
       <button id="btn-mode-stairs" class="btn btn-mode" aria-label="Tryb: Schody">[SVG]</button>
       <button id="btn-mode-square" class="btn btn-mode" aria-label="Tryb: Kwadraty">[SVG]</button>
       <button id="btn-mode-cube" class="btn btn-mode" aria-label="Tryb: Sześciany">[SVG]</button>
+      <button id="btn-mode-pyramid" class="btn btn-mode" aria-label="Tryb: Piramida">[SVG]</button>
     </div>
     <button id="btn-plus" class="btn btn-plus" aria-label="Dodaj kolumnę">+</button>
   </div>
@@ -24,12 +25,13 @@ Dokument pomocniczy zawierający informacje o strukturze aplikacji, selektorach 
 
 ### Kluczowe Selektory
 - `#threejs-canvas` - Główna scena 3D (Three.js renderer)
-- `#total-display` - Wyświetlacz suma: "X kolumn: Y klocków", "Y + K = N²" lub "N² × N = N³"
+- `#total-display` - Wyświetlacz suma: "X kolumn: Y klocków", "Y + K = N²", "N² × N = N³" lub "2N-1 kolumn: N² klocków"
 - `#btn-plus` (`.btn-plus`) - Przycisk dodaj kolumnę
 - `#btn-minus` (`.btn-minus`) - Przycisk usuń kolumnę
 - `#btn-mode-stairs` (`.btn-mode`) - Tryb Schody (SVG)
 - `#btn-mode-square` (`.btn-mode`) - Tryb Kwadraty (SVG)
 - `#btn-mode-cube` (`.btn-mode`) - Tryb Sześciany (SVG)
+- `#btn-mode-pyramid` (`.btn-mode`) - Tryb Piramida (SVG)
 - `.controls` - Kontener przycisków
 
 ## 📁 Struktura Plików JS
@@ -197,6 +199,7 @@ Auto-zoom kamery dostosowujący widok do liczby kolumn.
 #btn-mode-stairs.click() → staircase.setMode('stairs')
 #btn-mode-square.click() → staircase.setMode('square')
 #btn-mode-cube.click() → staircase.setMode('cube')
+#btn-mode-pyramid.click() → staircase.setMode('pyramid')
 ```
 
 ## 🔄 Interakcja z Aplikacją
@@ -206,7 +209,7 @@ Auto-zoom kamery dostosowujący widok do liczby kolumn.
 - **Zoom:** Scroll na canvas
 - **Dodaj kolumnę:** Klik na `#btn-plus`
 - **Usuń kolumnę:** Klik na `#btn-minus` (limit min 1)
-- **Tryb:** Klik na ikonę w `mode-toggle` (Schody / Kwadraty / Sześciany)
+- **Tryb:** Klik na ikonę w `mode-toggle` (Schody / Kwadraty / Sześciany / Piramida)
 
 ### Wyświetlane Informacje
 - Liczby nad kolumnami (1, 2, 3, ... N)

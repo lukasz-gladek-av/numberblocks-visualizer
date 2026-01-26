@@ -306,8 +306,9 @@ export function getCamera() {
  * Zoom camera to fit all columns in view without resetting position
  * @param {number} columnCount - Number of columns
  * @param {number} depthCount - Number of layers in depth
+ * @param {number} maxHeightBlocks - Tallest column height (in blocks)
  */
-export function adjustCameraForColumns(columnCount, depthCount = 1) {
+export function adjustCameraForColumns(columnCount, depthCount = 1, maxHeightBlocks = columnCount) {
   // Calculate the width needed to display all columns
   const columnSpacing = 0.9; // Match staircase spacing
   const totalWidth = (columnCount - 1) * columnSpacing + 0.9; // Add padding
@@ -317,7 +318,7 @@ export function adjustCameraForColumns(columnCount, depthCount = 1) {
   // Calculate the maximum height (tallest column = columnCount blocks)
   const blockSize = 0.9;
   const gap = 0.05;
-  const maxHeight = columnCount * (blockSize + gap);
+  const maxHeight = maxHeightBlocks * (blockSize + gap);
 
   // Calculate required distance based on FOV and dimensions
   const vFOV = camera.fov * Math.PI / 180; // Vertical field of view in radians

@@ -6,7 +6,8 @@ import { createColumnFromBlocks, getBlocksForNumber } from './blocks.js';
 const MODE_STAIRS = 'stairs';
 const MODE_SQUARE = 'square';
 const MODE_CUBE = 'cube';
-const MODE_ORDER = [MODE_STAIRS, MODE_SQUARE, MODE_CUBE];
+const MODE_PYRAMID = 'pyramid';
+const MODE_ORDER = [MODE_STAIRS, MODE_SQUARE, MODE_CUBE, MODE_PYRAMID];
 
 /**
  * Staircase class - manages the entire step squad structure
@@ -53,7 +54,8 @@ export class Staircase {
 
     // Recreate labels
     const columnSpacing = 0.9;
-    const totalWidth = (this.currentN - 1) * columnSpacing;
+    const columnCount = this.getColumnCount();
+    const totalWidth = (columnCount - 1) * columnSpacing;
     const startX = -totalWidth / 2;
     const depthCount = this.getDepthCount();
     const depthSpacing = 0.9;
@@ -61,10 +63,11 @@ export class Staircase {
     const startZ = -totalDepth / 2;
     const labelZ = startZ + totalDepth;
 
-    for (let i = 1; i <= this.currentN; i++) {
+    for (let i = 1; i <= columnCount; i++) {
       const positionX = startX + (i - 1) * columnSpacing;
       const blockCount = this.getColumnBlockCount(i);
-      this.addColumnLabel(i, positionX, blockCount, labelZ);
+      const labelValue = this.mode === MODE_PYRAMID ? blockCount : i;
+      this.addColumnLabel(labelValue, positionX, blockCount, labelZ);
     }
   }
 
@@ -80,19 +83,28 @@ export class Staircase {
     // Create new columns
     const columnSpacing = 0.9; // No spacing - blocks touch
     const depthSpacing = 0.9;
-    const totalWidth = (n - 1) * columnSpacing;
+    const columnCount = this.getColumnCount(n);
+    const totalWidth = (columnCount - 1) * columnSpacing;
     const startX = -totalWidth / 2;
     const depthCount = this.getDepthCount(n);
     const totalDepth = (depthCount - 1) * depthSpacing;
     const startZ = -totalDepth / 2;
     const isCubeMode = this.mode === MODE_CUBE;
+    const isPyramidMode = this.mode === MODE_PYRAMID;
     const shouldFillToSquare = this.mode === MODE_SQUARE || isCubeMode;
     const columnBlocksCache = new Map();
 
-    for (let i = 1; i <= n; i++) {
-      const extraBlocks = shouldFillToSquare ? this.getSquareFillBlocks(n, i) : [];
-      const baseBlocks = getBlocksForNumber(i);
-      const blocks = shouldFillToSquare && extraBlocks.length > 0
+    for (let i = 1; i <= columnCount; i++) {
+      let baseBlocks = [];
+      let extraBlocks = [];
+      if (isPyramidMode) {
+        const columnHeight = i <= n ? i : (2 * n - i);
+        baseBlocks = getBlocksForNumber(columnHeight);
+      } else {
+        baseBlocks = getBlocksForNumber(i);
+        extraBlocks = shouldFillToSquare ? this.getSquareFillBlocks(n, i) : [];
+      }
+      const blocks = extraBlocks.length > 0
         ? [...baseBlocks, ...extraBlocks.slice().reverse()]
         : baseBlocks;
       const shellBlocks = isCubeMode && blocks.length > 1 ? [blocks[0], blocks[blocks.length - 1]] : blocks;
@@ -107,9 +119,9 @@ export class Staircase {
     for (let zIndex = 0; zIndex < depthCount; zIndex++) {
       const positionZ = startZ + zIndex * depthSpacing;
       const isEdgeZ = zIndex === 0 || zIndex === depthCount - 1;
-      for (let i = 1; i <= n; i++) {
+      for (let i = 1; i <= columnCount; i++) {
         const positionX = startX + (i - 1) * columnSpacing;
-        const isEdgeX = i === 1 || i === n;
+        const isEdgeX = i === 1 || i === columnCount;
         const isSurfaceColumn = isEdgeX || isEdgeZ;
         const { full, shell, count } = columnBlocksCache.get(i);
         // In cube mode, skip interior blocks and render only the outer shell.
@@ -149,13 +161,13 @@ export class Staircase {
 
   /**
    * Add a 3D numerical label above each column
-   * @param {number} columnNumber - The column number
+   * @param {number} labelValue - The label number to display
    * @param {number} positionX - X position of the column
    * @param {number} blockCount - The number of blocks in the column
    */
-  addColumnLabel(columnNumber, positionX, blockCount = columnNumber, positionZ = 0) {
+  addColumnLabel(labelValue, positionX, blockCount = labelValue, positionZ = 0) {
     // Create 3D text geometry
-    const geometry = new TextGeometry(columnNumber.toString(), {
+    const geometry = new TextGeometry(labelValue.toString(), {
       font: this.font,
       size: 0.45,
       height: 0.08,
@@ -243,6 +255,10 @@ export class Staircase {
     return this.mode === MODE_CUBE ? n : 1;
   }
 
+  getColumnCount(n = this.currentN) {
+    return this.mode === MODE_PYRAMID ? n * 2 - 1 : n;
+  }
+
   cycleMode() {
     const currentIndex = MODE_ORDER.indexOf(this.mode);
     const nextIndex = currentIndex === -1 ? 0 : (currentIndex + 1) % MODE_ORDER.length;
@@ -277,6 +293,10 @@ export class Staircase {
 
   getCubeFillTotal() {
     return this.getCubeTotal() - this.getSquareTotal();
+  }
+
+  getPyramidTotal() {
+    return this.currentN * this.currentN;
   }
 
   getColumnBlockCount(columnNumber) {
