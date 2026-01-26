@@ -59,7 +59,7 @@ export class Staircase {
     const depthSpacing = 0.9;
     const totalDepth = (depthCount - 1) * depthSpacing;
     const startZ = -totalDepth / 2;
-    const labelZ = depthCount > 1 ? startZ + totalDepth + 0.55 : 0;
+    const labelZ = startZ + totalDepth;
 
     for (let i = 1; i <= this.currentN; i++) {
       const positionX = startX + (i - 1) * columnSpacing;
@@ -183,7 +183,7 @@ export class Staircase {
     const gap = 0.01;
     const safeBlockCount = Math.max(blockCount, 1);
     const topOfColumn = (safeBlockCount - 1) * (blockSize + gap) + blockSize;
-    const labelOffset = 0.18;
+    const labelOffset = 0.3;
     labelMesh.position.set(positionX, topOfColumn + labelOffset, positionZ);
 
     this.labelGroup.add(labelMesh);
