@@ -251,6 +251,18 @@ export class Staircase {
     return this.mode;
   }
 
+  setMode(mode) {
+    if (!MODE_ORDER.includes(mode)) {
+      return this.mode;
+    }
+    if (this.mode === mode) {
+      return this.mode;
+    }
+    this.mode = mode;
+    this.build(this.currentN);
+    return this.mode;
+  }
+
   getSquareTotal() {
     return this.currentN * this.currentN;
   }

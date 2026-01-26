@@ -7,12 +7,14 @@ export function setupControls(staircase, updateCallback, adjustCameraCallback) {
   // Button elements
   const btnPlus = document.getElementById('btn-plus');
   const btnMinus = document.getElementById('btn-minus');
-  const btnSquare = document.getElementById('btn-square');
+  const btnModeStairs = document.getElementById('btn-mode-stairs');
+  const btnModeSquare = document.getElementById('btn-mode-square');
+  const btnModeCube = document.getElementById('btn-mode-cube');
   const totalDisplay = document.getElementById('total-display');
 
   // Initialize total display
   updateTotalDisplay(staircase, totalDisplay);
-  updateModeButton(staircase, btnSquare);
+  updateModeButtons(staircase, { btnModeStairs, btnModeSquare, btnModeCube });
 
   // Plus button - add column
   btnPlus.addEventListener('click', () => {
@@ -38,9 +40,29 @@ export function setupControls(staircase, updateCallback, adjustCameraCallback) {
     }
   });
 
-  btnSquare.addEventListener('click', () => {
-    staircase.cycleMode();
-    updateModeButton(staircase, btnSquare);
+  btnModeStairs.addEventListener('click', () => {
+    staircase.setMode('stairs');
+    updateModeButtons(staircase, { btnModeStairs, btnModeSquare, btnModeCube });
+    updateTotalDisplay(staircase, totalDisplay);
+    if (adjustCameraCallback) {
+      adjustCameraCallback(staircase.getCurrentN(), staircase.getDepthCount());
+    }
+    updateCallback?.();
+  });
+
+  btnModeSquare.addEventListener('click', () => {
+    staircase.setMode('square');
+    updateModeButtons(staircase, { btnModeStairs, btnModeSquare, btnModeCube });
+    updateTotalDisplay(staircase, totalDisplay);
+    if (adjustCameraCallback) {
+      adjustCameraCallback(staircase.getCurrentN(), staircase.getDepthCount());
+    }
+    updateCallback?.();
+  });
+
+  btnModeCube.addEventListener('click', () => {
+    staircase.setMode('cube');
+    updateModeButtons(staircase, { btnModeStairs, btnModeSquare, btnModeCube });
     updateTotalDisplay(staircase, totalDisplay);
     if (adjustCameraCallback) {
       adjustCameraCallback(staircase.getCurrentN(), staircase.getDepthCount());
@@ -51,9 +73,11 @@ export function setupControls(staircase, updateCallback, adjustCameraCallback) {
   // Touch-friendly additions
   addTouchFeedback(btnPlus);
   addTouchFeedback(btnMinus);
-  addTouchFeedback(btnSquare);
+  addTouchFeedback(btnModeStairs);
+  addTouchFeedback(btnModeSquare);
+  addTouchFeedback(btnModeCube);
 
-  return { btnPlus, btnMinus, btnSquare, totalDisplay };
+  return { btnPlus, btnMinus, btnModeStairs, btnModeSquare, btnModeCube, totalDisplay };
 }
 
 /**
@@ -80,20 +104,19 @@ function updateTotalDisplay(staircase, totalDisplay) {
   totalDisplay.textContent = `${n} kolumn: ${total} klocków`;
 }
 
-function updateModeButton(staircase, button) {
+function updateModeButtons(staircase, buttons) {
   const mode = staircase.getMode();
-  if (mode === 'stairs') {
-    button.textContent = 'Schody';
-    button.setAttribute('aria-label', 'Zmień tryb (Schody)');
-    return;
-  }
-  if (mode === 'square') {
-    button.textContent = 'Kwadraty';
-    button.setAttribute('aria-label', 'Zmień tryb (Kwadraty)');
-    return;
-  }
-  button.textContent = 'Sześciany';
-  button.setAttribute('aria-label', 'Zmień tryb (Sześciany)');
+  const modeButtons = [
+    { key: 'stairs', button: buttons.btnModeStairs },
+    { key: 'square', button: buttons.btnModeSquare },
+    { key: 'cube', button: buttons.btnModeCube },
+  ];
+
+  modeButtons.forEach(({ key, button }) => {
+    const isActive = mode === key;
+    button.classList.toggle('active', isActive);
+    button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+  });
 }
 
 /**
@@ -113,7 +136,7 @@ function addTouchFeedback(button) {
 
   // Mouse/touch up
   const resetScale = () => {
-    button.style.transform = 'scale(1)';
+    button.style.transform = '';
   };
 
   button.addEventListener('mouseup', resetScale);

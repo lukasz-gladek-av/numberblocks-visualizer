@@ -12,7 +12,11 @@ Dokument pomocniczy zawierający informacje o strukturze aplikacji, selektorach 
   <div id="total-display" class="total-display">5 kolumn: 15 klocków</div>
   <div class="controls">
     <button id="btn-minus" class="btn btn-minus" aria-label="Usuń kolumnę">−</button>
-    <button id="btn-square" class="btn btn-square" aria-label="Zmień tryb (Schody)">Schody</button>
+    <div class="mode-toggle" aria-label="Tryb">
+      <button id="btn-mode-stairs" class="btn btn-mode" aria-label="Tryb: Schody">[SVG]</button>
+      <button id="btn-mode-square" class="btn btn-mode" aria-label="Tryb: Kwadraty">[SVG]</button>
+      <button id="btn-mode-cube" class="btn btn-mode" aria-label="Tryb: Sześciany">[SVG]</button>
+    </div>
     <button id="btn-plus" class="btn btn-plus" aria-label="Dodaj kolumnę">+</button>
   </div>
 </div>
@@ -23,7 +27,9 @@ Dokument pomocniczy zawierający informacje o strukturze aplikacji, selektorach 
 - `#total-display` - Wyświetlacz suma: "X kolumn: Y klocków", "Y + K = N²" lub "N² × N = N³"
 - `#btn-plus` (`.btn-plus`) - Przycisk dodaj kolumnę
 - `#btn-minus` (`.btn-minus`) - Przycisk usuń kolumnę
-- `#btn-square` (`.btn-square`) - Przycisk trybu: Schody/Kwadraty/Sześciany
+- `#btn-mode-stairs` (`.btn-mode`) - Tryb Schody (SVG)
+- `#btn-mode-square` (`.btn-mode`) - Tryb Kwadraty (SVG)
+- `#btn-mode-cube` (`.btn-mode`) - Tryb Sześciany (SVG)
 - `.controls` - Kontener przycisków
 
 ## 📁 Struktura Plików JS
@@ -188,7 +194,9 @@ Auto-zoom kamery dostosowujący widok do liczby kolumn.
 ```javascript
 #btn-plus.click() → staircase.addColumn()
 #btn-minus.click() → staircase.removeColumn()
-#btn-square.click() → staircase.cycleMode()
+#btn-mode-stairs.click() → staircase.setMode('stairs')
+#btn-mode-square.click() → staircase.setMode('square')
+#btn-mode-cube.click() → staircase.setMode('cube')
 ```
 
 ## 🔄 Interakcja z Aplikacją
@@ -198,7 +206,7 @@ Auto-zoom kamery dostosowujący widok do liczby kolumn.
 - **Zoom:** Scroll na canvas
 - **Dodaj kolumnę:** Klik na `#btn-plus`
 - **Usuń kolumnę:** Klik na `#btn-minus` (limit min 1)
-- **Tryb:** Klik na `#btn-square` (Schody → Kwadraty → Sześciany)
+- **Tryb:** Klik na ikonę w `mode-toggle` (Schody / Kwadraty / Sześciany)
 
 ### Wyświetlane Informacje
 - Liczby nad kolumnami (1, 2, 3, ... N)
