@@ -4,8 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Numberblocks Step Squad 3D</title>
-  <script type="module" crossorigin src="/numberblocks-visualizer/assets/index-CNUtI69Y.js"></script>
-  <link rel="stylesheet" crossorigin href="/numberblocks-visualizer/assets/index-B_OugJ5v.css">
+  <script type="module" crossorigin src="/numberblocks-visualizer/assets/index-B-16CxFv.js"></script>
+  <link rel="stylesheet" crossorigin href="/numberblocks-visualizer/assets/index-C1czMNuf.css">
 </head>
 <body>
   <!-- Three.js Canvas -->
@@ -19,7 +19,32 @@
     <!-- Control Buttons -->
     <div class="controls">
       <button id="btn-minus" class="btn btn-minus" aria-label="Usuń kolumnę">−</button>
-      <button id="btn-square" class="btn btn-square" aria-label="Zmień tryb (Schody)">Schody</button>
+      <div class="mode-toggle" aria-label="Tryb">
+        <button id="btn-mode-stairs" class="btn btn-mode" aria-label="Tryb: Schody" aria-pressed="true">
+          <svg class="mode-icon" viewBox="0 0 64 64" role="img" aria-hidden="true">
+            <polyline points="10 50 26 50 26 38 40 38 40 26 54 26" />
+          </svg>
+        </button>
+        <button id="btn-mode-square" class="btn btn-mode" aria-label="Tryb: Kwadraty" aria-pressed="false">
+          <svg class="mode-icon" viewBox="0 0 64 64" role="img" aria-hidden="true">
+            <rect x="14" y="14" width="36" height="36" rx="4" />
+          </svg>
+        </button>
+        <button id="btn-mode-cube" class="btn btn-mode" aria-label="Tryb: Sześciany" aria-pressed="false">
+          <svg class="mode-icon" viewBox="0 0 64 64" role="img" aria-hidden="true">
+            <polygon points="11 25 25 11 53 11 39 25" />
+            <rect x="11" y="25" width="28" height="28" />
+            <polygon points="39 25 53 11 53 39 39 53" />
+          </svg>
+        </button>
+        <button id="btn-mode-pyramid" class="btn btn-mode" aria-label="Tryb: Piramida" aria-pressed="false">
+          <svg class="mode-icon" viewBox="0 0 64 64" role="img" aria-hidden="true">
+            <polygon points="12 50 32 14 52 50" />
+            <line x1="20" y1="40" x2="44" y2="40" />
+            <line x1="24" y1="32" x2="40" y2="32" />
+          </svg>
+        </button>
+      </div>
       <button id="btn-plus" class="btn btn-plus" aria-label="Dodaj kolumnę">+</button>
     </div>
   </div>
