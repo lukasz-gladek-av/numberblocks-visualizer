@@ -11,11 +11,11 @@ Interaktywna edukacyjna aplikacja 3D pokazująca "step squad" z Numberblocks - s
 - ✅ Wizualizacja 3D schodów (N kolumn, od 1 do N bloków)
 - ✅ Przycisk + dodawania kolumn
 - ✅ Przycisk - odejmowania kolumn (min 1)
-- ✅ Przycisk Kwadrat/Schody: uzupełnianie do N × N
+- ✅ Przycisk trybu: Schody → Kwadraty → Sześciany (N × N × N)
 - ✅ Auto-zoom dostosowujący widok do liczby kolumn
 - ✅ 3D rotacja myszką (OrbitControls)
 - ✅ Liczby nad kolumnami (1..N)
-- ✅ Wyświetlacz sumy bloków: N × (N+1) / 2 (tryb kwadratu pokazuje A + B = C)
+- ✅ Wyświetlacz sumy bloków: N × (N+1) / 2 (kwadrat: A + B = C, sześcian: N² × N = N³)
 - ✅ Responsywny UI na mobile i desktop
 
 ### Kolory i Obramowanie (Phase 1 - 2026)
@@ -148,6 +148,7 @@ Obramowanie tworzy się z cienkich brył z lekkim zaokrągleniem (RoundedBoxGeom
 - Geometrie bloków i obramowań są współdzielone między kolumnami
 - Materiały są cache'owane per kolor, co ogranicza liczbę alokacji
 - Elementy obramowań nie rzucają cieni, by zmniejszyć koszt renderingu
+- Tryb sześcianu renderuje tylko zewnętrzną powłokę (bez niewidocznych bloków wewnątrz)
 
 ### 5. Pozycjonowanie bloków
 Wszystkie bloki są prawidłowo pozycjonowane na ziemi (y=0). Wysokość bloku wynosi 0.9 jednostki, z 0.01 jednostkami przerwy między blokami.
@@ -193,7 +194,7 @@ Refaktoryzacja Phase 1 - System konfiguracji i obramowanie krawędziowe:
 - ✅ Początko stan: 5 kolumn, 15 bloków
 - ✅ Przycisk +: dodaje kolumny
 - ✅ Przycisk -: usuwa kolumny do minimum 1 (1 blok)
-- ✅ Przycisk Kwadrat: uzupełnia schody do kwadratu, ponownie przywraca schody
+- ✅ Przycisk trybu: przełącza Schody → Kwadraty → Sześciany
 - ✅ Auto-zoom: prawidłowo dostosowuje widok
 - ✅ 3D rotacja: płynne obroty myszką
 - ✅ Etykiety: bez duplikatów

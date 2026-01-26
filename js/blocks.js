@@ -108,10 +108,13 @@ export function getBlocksForNumber(number) {
  * @returns {THREE.Group} - Group containing all blocks in the column
  */
 export function createColumn(columnNumber, positionX = 0, extraBlocks = []) {
-  const column = new THREE.Group();
-
   const baseBlocks = getBlocksForNumber(columnNumber);
   const blocks = extraBlocks.length > 0 ? [...baseBlocks, ...extraBlocks] : baseBlocks;
+  return createColumnFromBlocks(blocks, positionX, blocks.length);
+}
+
+export function createColumnFromBlocks(blocks, positionX = 0, blockCountOverride = null, blockIndices = null) {
+  const column = new THREE.Group();
 
   // Create blocks from config
   blocks.forEach((blockConfig, i) => {
@@ -122,7 +125,8 @@ export function createColumn(columnNumber, positionX = 0, extraBlocks = []) {
 
     // Stack blocks vertically - can touch now due to rounded edges
     // Position so blocks sit on ground (y=0) and stack upward
-    const yPosition = i * (BLOCK_SIZE + GAP) + BLOCK_SIZE / 2;
+    const blockIndex = blockIndices ? blockIndices[i] : i;
+    const yPosition = blockIndex * (BLOCK_SIZE + GAP) + BLOCK_SIZE / 2;
 
     block.position.y = yPosition;
     column.add(block);
@@ -138,17 +142,20 @@ export function createColumn(columnNumber, positionX = 0, extraBlocks = []) {
     // Find consecutive blocks with same color and borderColor
     while (groupEnd + 1 < blocks.length &&
            blocks[groupEnd + 1].color === currentBlock.color &&
-           blocks[groupEnd + 1].borderColor === currentBlock.borderColor) {
+           blocks[groupEnd + 1].borderColor === currentBlock.borderColor &&
+           (!blockIndices || blockIndices[groupEnd + 1] === blockIndices[groupEnd] + 1)) {
       groupEnd++;
     }
 
     // If this group has a borderColor, add a border around the entire group
     if (currentBlock.borderColor !== null && currentBlock.borderColor !== undefined) {
-      const groupSize = groupEnd - i + 1;
+      const groupSize = blockIndices
+        ? blockIndices[groupEnd] - blockIndices[i] + 1
+        : groupEnd - i + 1;
       const groupHeight = groupSize * (BLOCK_SIZE + GAP) - GAP;
 
       // Position at the center of the group
-      const groupStartY = i * (BLOCK_SIZE + GAP);
+      const groupStartY = (blockIndices ? blockIndices[i] : i) * (BLOCK_SIZE + GAP);
       const groupCenterY = groupStartY + groupHeight / 2;
 
       const boxSize = BLOCK_SIZE;
@@ -192,7 +199,7 @@ export function createColumn(columnNumber, positionX = 0, extraBlocks = []) {
   // Position the column horizontally
   column.position.x = positionX;
 
-  column.userData.blockCount = blocks.length;
+  column.userData.blockCount = blockCountOverride ?? blocks.length;
   column.position.y = 0; // Bottom aligned at ground level
 
   return column;

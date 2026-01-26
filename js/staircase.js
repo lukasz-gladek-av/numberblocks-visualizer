@@ -1,7 +1,12 @@
 import * as THREE from 'three';
 import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js';
 import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js';
-import { createColumn, getBlocksForNumber } from './blocks.js';
+import { createColumnFromBlocks, getBlocksForNumber } from './blocks.js';
+
+const MODE_STAIRS = 'stairs';
+const MODE_SQUARE = 'square';
+const MODE_CUBE = 'cube';
+const MODE_ORDER = [MODE_STAIRS, MODE_SQUARE, MODE_CUBE];
 
 /**
  * Staircase class - manages the entire step squad structure
@@ -16,7 +21,7 @@ export class Staircase {
     this.scene.add(this.group);
     this.scene.add(this.labelGroup);
     this.font = null;
-    this.isSquareMode = false;
+    this.mode = MODE_STAIRS;
 
     // Load font for 3D text
     this.loadFont();
@@ -50,11 +55,16 @@ export class Staircase {
     const columnSpacing = 0.9;
     const totalWidth = (this.currentN - 1) * columnSpacing;
     const startX = -totalWidth / 2;
+    const depthCount = this.getDepthCount();
+    const depthSpacing = 0.9;
+    const totalDepth = (depthCount - 1) * depthSpacing;
+    const startZ = -totalDepth / 2;
+    const labelZ = depthCount > 1 ? startZ + totalDepth + 0.55 : 0;
 
     for (let i = 1; i <= this.currentN; i++) {
       const positionX = startX + (i - 1) * columnSpacing;
       const blockCount = this.getColumnBlockCount(i);
-      this.addColumnLabel(i, positionX, blockCount);
+      this.addColumnLabel(i, positionX, blockCount, labelZ);
     }
   }
 
@@ -69,28 +79,62 @@ export class Staircase {
 
     // Create new columns
     const columnSpacing = 0.9; // No spacing - blocks touch
+    const depthSpacing = 0.9;
     const totalWidth = (n - 1) * columnSpacing;
     const startX = -totalWidth / 2;
+    const depthCount = this.getDepthCount(n);
+    const totalDepth = (depthCount - 1) * depthSpacing;
+    const startZ = -totalDepth / 2;
+    const isCubeMode = this.mode === MODE_CUBE;
+    const shouldFillToSquare = this.mode === MODE_SQUARE || isCubeMode;
+    const columnBlocksCache = new Map();
 
     for (let i = 1; i <= n; i++) {
-      const positionX = startX + (i - 1) * columnSpacing;
-      const extraBlocks = this.isSquareMode ? this.getSquareFillBlocks(n, i) : [];
-      const column = createColumn(i, positionX, extraBlocks);
-      column.castShadow = true;
-      column.receiveShadow = true;
-
-      // Recursively set castShadow for all children
-      column.traverse(child => {
-        if (child instanceof THREE.Mesh) {
-          if (!child.userData.noShadow) {
-            child.castShadow = true;
-            child.receiveShadow = true;
-          }
-        }
+      const extraBlocks = shouldFillToSquare ? this.getSquareFillBlocks(n, i) : [];
+      const baseBlocks = getBlocksForNumber(i);
+      const blocks = extraBlocks.length > 0 ? [...baseBlocks, ...extraBlocks] : baseBlocks;
+      const shellBlocks = isCubeMode && blocks.length > 1 ? [blocks[0], blocks[blocks.length - 1]] : blocks;
+      const shellIndices = shellBlocks.length > 1 ? [0, blocks.length - 1] : [0];
+      columnBlocksCache.set(i, {
+        full: { blocks, indices: null },
+        shell: { blocks: shellBlocks, indices: shellIndices },
+        count: blocks.length,
       });
+    }
 
-      this.columns.push(column);
-      this.group.add(column);
+    for (let zIndex = 0; zIndex < depthCount; zIndex++) {
+      const positionZ = startZ + zIndex * depthSpacing;
+      const isEdgeZ = zIndex === 0 || zIndex === depthCount - 1;
+      for (let i = 1; i <= n; i++) {
+        const positionX = startX + (i - 1) * columnSpacing;
+        const isEdgeX = i === 1 || i === n;
+        const isSurfaceColumn = isEdgeX || isEdgeZ;
+        const { full, shell, count } = columnBlocksCache.get(i);
+        // In cube mode, skip interior blocks and render only the outer shell.
+        const columnConfig = isCubeMode && !isSurfaceColumn ? shell : full;
+        const column = createColumnFromBlocks(
+          columnConfig.blocks,
+          positionX,
+          count,
+          columnConfig.indices
+        );
+        column.position.z = positionZ;
+        column.castShadow = true;
+        column.receiveShadow = true;
+
+        // Recursively set castShadow for all children
+        column.traverse(child => {
+          if (child instanceof THREE.Mesh) {
+            if (!child.userData.noShadow) {
+              child.castShadow = true;
+              child.receiveShadow = true;
+            }
+          }
+        });
+
+        this.columns.push(column);
+        this.group.add(column);
+      }
     }
 
     this.currentN = n;
@@ -107,7 +151,7 @@ export class Staircase {
    * @param {number} positionX - X position of the column
    * @param {number} blockCount - The number of blocks in the column
    */
-  addColumnLabel(columnNumber, positionX, blockCount = columnNumber) {
+  addColumnLabel(columnNumber, positionX, blockCount = columnNumber, positionZ = 0) {
     // Create 3D text geometry
     const geometry = new TextGeometry(columnNumber.toString(), {
       font: this.font,
@@ -140,7 +184,7 @@ export class Staircase {
     const safeBlockCount = Math.max(blockCount, 1);
     const topOfColumn = (safeBlockCount - 1) * (blockSize + gap) + blockSize;
     const labelOffset = 0.18;
-    labelMesh.position.set(positionX, topOfColumn + labelOffset, 0);
+    labelMesh.position.set(positionX, topOfColumn + labelOffset, positionZ);
 
     this.labelGroup.add(labelMesh);
   }
@@ -181,14 +225,28 @@ export class Staircase {
     return this.currentN;
   }
 
-  getSquareMode() {
-    return this.isSquareMode;
+  getMode() {
+    return this.mode;
   }
 
-  toggleSquareMode() {
-    this.isSquareMode = !this.isSquareMode;
+  getSquareMode() {
+    return this.mode === MODE_SQUARE;
+  }
+
+  getCubeMode() {
+    return this.mode === MODE_CUBE;
+  }
+
+  getDepthCount(n = this.currentN) {
+    return this.mode === MODE_CUBE ? n : 1;
+  }
+
+  cycleMode() {
+    const currentIndex = MODE_ORDER.indexOf(this.mode);
+    const nextIndex = currentIndex === -1 ? 0 : (currentIndex + 1) % MODE_ORDER.length;
+    this.mode = MODE_ORDER[nextIndex];
     this.build(this.currentN);
-    return this.isSquareMode;
+    return this.mode;
   }
 
   getSquareTotal() {
@@ -197,6 +255,14 @@ export class Staircase {
 
   getSquareFillTotal() {
     return this.getSquareTotal() - this.getTotal();
+  }
+
+  getCubeTotal() {
+    return this.currentN * this.currentN * this.currentN;
+  }
+
+  getCubeFillTotal() {
+    return this.getCubeTotal() - this.getSquareTotal();
   }
 
   getColumnBlockCount(columnNumber) {

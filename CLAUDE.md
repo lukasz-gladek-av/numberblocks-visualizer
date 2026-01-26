@@ -12,7 +12,7 @@ Dokument pomocniczy zawierający informacje o strukturze aplikacji, selektorach 
   <div id="total-display" class="total-display">5 kolumn: 15 klocków</div>
   <div class="controls">
     <button id="btn-minus" class="btn btn-minus" aria-label="Usuń kolumnę">−</button>
-    <button id="btn-square" class="btn btn-square" aria-label="Uzupełnij do kwadratu">Kwadrat</button>
+    <button id="btn-square" class="btn btn-square" aria-label="Zmień tryb (Schody)">Schody</button>
     <button id="btn-plus" class="btn btn-plus" aria-label="Dodaj kolumnę">+</button>
   </div>
 </div>
@@ -20,10 +20,10 @@ Dokument pomocniczy zawierający informacje o strukturze aplikacji, selektorach 
 
 ### Kluczowe Selektory
 - `#threejs-canvas` - Główna scena 3D (Three.js renderer)
-- `#total-display` - Wyświetlacz suma: "X kolumn: Y klocków" lub "Y + K = N²"
+- `#total-display` - Wyświetlacz suma: "X kolumn: Y klocków", "Y + K = N²" lub "N² × N = N³"
 - `#btn-plus` (`.btn-plus`) - Przycisk dodaj kolumnę
 - `#btn-minus` (`.btn-minus`) - Przycisk usuń kolumnę
-- `#btn-square` (`.btn-square`) - Przycisk Kwadrat/Schody
+- `#btn-square` (`.btn-square`) - Przycisk trybu: Schody/Kwadraty/Sześciany
 - `.controls` - Kontener przycisków
 
 ## 📁 Struktura Plików JS
@@ -169,6 +169,7 @@ createColumn(columnNumber, positionX = 0, extraBlocks = []) → THREE.Group
 5. Dla grup z `borderColor`: tworzy obramowanie z RoundedBoxGeometry (boki + gora/dol)
 6. Pozycjonuje kolumnę na x = `positionX`
 7. Współdzieli geometrie i materiały przez cache, aby ograniczyć alokacje
+8. Tryb sześcianu renderuje tylko zewnętrzną powłokę (bez niewidocznych bloków wewnątrz)
 
 **Obramowanie (RoundedBoxGeometry):**
 - Boki + gora/dol grupy blokow (bez frontu/tylu)
@@ -187,7 +188,7 @@ Auto-zoom kamery dostosowujący widok do liczby kolumn.
 ```javascript
 #btn-plus.click() → staircase.addColumn()
 #btn-minus.click() → staircase.removeColumn()
-#btn-square.click() → staircase.toggleSquareMode()
+#btn-square.click() → staircase.cycleMode()
 ```
 
 ## 🔄 Interakcja z Aplikacją
@@ -197,12 +198,22 @@ Auto-zoom kamery dostosowujący widok do liczby kolumn.
 - **Zoom:** Scroll na canvas
 - **Dodaj kolumnę:** Klik na `#btn-plus`
 - **Usuń kolumnę:** Klik na `#btn-minus` (limit min 1)
-- **Kwadrat/Schody:** Klik na `#btn-square` (uzupełnia do N × N)
+- **Tryb:** Klik na `#btn-square` (Schody → Kwadraty → Sześciany)
 
 ### Wyświetlane Informacje
 - Liczby nad kolumnami (1, 2, 3, ... N)
-- Suma bloków w `#total-display`: "N kolumn: M klocków" lub "M + K = N²"
-- Formula: M = N × (N + 1) / 2 (tryb kwadratu: M + K = N²)
+- Suma bloków w `#total-display`: "N kolumn: M klocków", "M + K = N²" lub "N² × N = N³"
+- Formula: M = N × (N + 1) / 2 (kwadraty: M + K = N², sześciany: N² × N = N³)
+
+## 🚀 GitHub Pages (build)
+
+Przed każdym commitem, który ma trafić na Pages, uruchom:
+
+```bash
+npm run build
+```
+
+Commit powinien zawierać zaktualizowany `docs/` (Pages korzysta z `master:/docs`).
 
 ## 📊 Dane Kolumn (Config Object)
 

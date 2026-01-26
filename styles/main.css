@@ -144,7 +144,7 @@ canvas {
 }
 
 .btn-square {
-  width: 120px;
+  width: 140px;
   font-size: 1.3rem;
   letter-spacing: 0.6px;
   white-space: nowrap;
@@ -184,7 +184,7 @@ canvas {
   }
 
   .btn-square {
-    width: 110px;
+    width: 125px;
     font-size: 1.1rem;
   }
 }
@@ -213,7 +213,7 @@ canvas {
   }
 
   .btn-square {
-    width: 104px;
+    width: 116px;
     font-size: 1rem;
   }
 
@@ -243,7 +243,7 @@ canvas {
   }
 
   .btn-square {
-    width: 100px;
+    width: 110px;
     font-size: 0.95rem;
   }
 }

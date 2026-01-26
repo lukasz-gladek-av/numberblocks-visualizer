@@ -12,12 +12,7 @@ export function setupControls(staircase, updateCallback, adjustCameraCallback) {
 
   // Initialize total display
   updateTotalDisplay(staircase, totalDisplay);
-  const isSquareMode = staircase.getSquareMode();
-  btnSquare.textContent = isSquareMode ? 'Schody' : 'Kwadrat';
-  btnSquare.setAttribute(
-    'aria-label',
-    isSquareMode ? 'Pokaż schody' : 'Uzupełnij do kwadratu'
-  );
+  updateModeButton(staircase, btnSquare);
 
   // Plus button - add column
   btnPlus.addEventListener('click', () => {
@@ -25,7 +20,7 @@ export function setupControls(staircase, updateCallback, adjustCameraCallback) {
     if (success) {
       updateTotalDisplay(staircase, totalDisplay);
       if (adjustCameraCallback) {
-        adjustCameraCallback(staircase.getCurrentN());
+        adjustCameraCallback(staircase.getCurrentN(), staircase.getDepthCount());
       }
       updateCallback?.();
     }
@@ -37,22 +32,18 @@ export function setupControls(staircase, updateCallback, adjustCameraCallback) {
     if (success) {
       updateTotalDisplay(staircase, totalDisplay);
       if (adjustCameraCallback) {
-        adjustCameraCallback(staircase.getCurrentN());
+        adjustCameraCallback(staircase.getCurrentN(), staircase.getDepthCount());
       }
       updateCallback?.();
     }
   });
 
   btnSquare.addEventListener('click', () => {
-    const isSquareMode = staircase.toggleSquareMode();
-    btnSquare.textContent = isSquareMode ? 'Schody' : 'Kwadrat';
-    btnSquare.setAttribute(
-      'aria-label',
-      isSquareMode ? 'Pokaż schody' : 'Uzupełnij do kwadratu'
-    );
+    staircase.cycleMode();
+    updateModeButton(staircase, btnSquare);
     updateTotalDisplay(staircase, totalDisplay);
     if (adjustCameraCallback) {
-      adjustCameraCallback(staircase.getCurrentN());
+      adjustCameraCallback(staircase.getCurrentN(), staircase.getDepthCount());
     }
     updateCallback?.();
   });
@@ -73,13 +64,36 @@ export function setupControls(staircase, updateCallback, adjustCameraCallback) {
 function updateTotalDisplay(staircase, totalDisplay) {
   const n = staircase.getCurrentN();
   const total = staircase.getTotal();
-  if (staircase.getSquareMode()) {
+  const mode = staircase.getMode();
+  if (mode === 'square') {
     const squareFill = staircase.getSquareFillTotal();
     const squareTotal = staircase.getSquareTotal();
     totalDisplay.textContent = `${total} + ${squareFill} = ${squareTotal}`;
-  } else {
-    totalDisplay.textContent = `${n} kolumn: ${total} klocków`;
+    return;
   }
+  if (mode === 'cube') {
+    const squareTotal = staircase.getSquareTotal();
+    const cubeTotal = staircase.getCubeTotal();
+    totalDisplay.textContent = `${squareTotal} × ${n} = ${cubeTotal}`;
+    return;
+  }
+  totalDisplay.textContent = `${n} kolumn: ${total} klocków`;
+}
+
+function updateModeButton(staircase, button) {
+  const mode = staircase.getMode();
+  if (mode === 'stairs') {
+    button.textContent = 'Schody';
+    button.setAttribute('aria-label', 'Zmień tryb (Schody)');
+    return;
+  }
+  if (mode === 'square') {
+    button.textContent = 'Kwadraty';
+    button.setAttribute('aria-label', 'Zmień tryb (Kwadraty)');
+    return;
+  }
+  button.textContent = 'Sześciany';
+  button.setAttribute('aria-label', 'Zmień tryb (Sześciany)');
 }
 
 /**

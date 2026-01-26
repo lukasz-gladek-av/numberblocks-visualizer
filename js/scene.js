@@ -305,11 +305,14 @@ export function getCamera() {
 /**
  * Zoom camera to fit all columns in view without resetting position
  * @param {number} columnCount - Number of columns
+ * @param {number} depthCount - Number of layers in depth
  */
-export function adjustCameraForColumns(columnCount) {
+export function adjustCameraForColumns(columnCount, depthCount = 1) {
   // Calculate the width needed to display all columns
   const columnSpacing = 0.9; // Match staircase spacing
   const totalWidth = (columnCount - 1) * columnSpacing + 0.9; // Add padding
+  const totalDepth = (depthCount - 1) * columnSpacing + 0.9;
+  const maxHorizontal = Math.max(totalWidth, totalDepth);
 
   // Calculate the maximum height (tallest column = columnCount blocks)
   const blockSize = 0.9;
@@ -319,10 +322,12 @@ export function adjustCameraForColumns(columnCount) {
   // Calculate required distance based on FOV and dimensions
   const vFOV = camera.fov * Math.PI / 180; // Vertical field of view in radians
   const distanceForHeight = maxHeight / (2 * Math.tan(vFOV / 2)) + 5;
-  const distanceForWidth = totalWidth / (2 * Math.tan((camera.fov / camera.aspect) * Math.PI / 360)) + 5;
+  const hFOV = 2 * Math.atan(Math.tan(vFOV / 2) * camera.aspect);
+  const distanceForWidth = maxHorizontal / (2 * Math.tan(hFOV / 2)) + 5;
+  const distanceForDepth = totalDepth / 2 + 6;
 
   // Use the larger distance needed
-  const distance = Math.max(distanceForHeight, distanceForWidth, 15) * 1.2;
+  const distance = Math.max(distanceForHeight, distanceForWidth, distanceForDepth, 15) * 1.2;
 
   // Adjust camera height to look at optimal point of the staircase
   // For small counts stay at 4.5, for larger counts move up to center of staircase
