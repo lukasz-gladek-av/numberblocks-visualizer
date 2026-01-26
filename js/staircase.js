@@ -92,7 +92,9 @@ export class Staircase {
     for (let i = 1; i <= n; i++) {
       const extraBlocks = shouldFillToSquare ? this.getSquareFillBlocks(n, i) : [];
       const baseBlocks = getBlocksForNumber(i);
-      const blocks = extraBlocks.length > 0 ? [...baseBlocks, ...extraBlocks] : baseBlocks;
+      const blocks = shouldFillToSquare && extraBlocks.length > 0
+        ? [...baseBlocks, ...extraBlocks.slice().reverse()]
+        : baseBlocks;
       const shellBlocks = isCubeMode && blocks.length > 1 ? [blocks[0], blocks[blocks.length - 1]] : blocks;
       const shellIndices = shellBlocks.length > 1 ? [0, blocks.length - 1] : [0];
       columnBlocksCache.set(i, {
