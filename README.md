@@ -3,7 +3,7 @@
 
 Live demo: https://lukasz-gladek-av.github.io/numberblocks-visualizer/
 
-Interaktywna edukacyjna aplikacja 3D pokazująca "step squad" z Numberblocks - schody złożone z kolorowych klocków, gdzie dla liczby N wyświetlamy kolumny od 1 do N bloków.
+Interaktywna edukacyjna aplikacja 3D pokazująca "step squad" z Numberblocks - schody złożone z kolorowych klocków, gdzie dla liczby N wyświetlamy kolumny od 1 do N bloków (oraz tryb pojedynczej kolumny).
 
 ## Funkcjonalności
 
@@ -11,11 +11,12 @@ Interaktywna edukacyjna aplikacja 3D pokazująca "step squad" z Numberblocks - s
 - ✅ Wizualizacja 3D schodów (N kolumn, od 1 do N bloków)
 - ✅ Przycisk + dodawania kolumn
 - ✅ Przycisk - odejmowania kolumn (min 1)
-- ✅ Przycisk trybu: Schody → Kwadraty → Sześciany → Piramida (1-2-...-N-...-2-1)
+- ✅ Przycisk trybu: Schody → Kolumna → Kwadraty → Sześciany → Piramida (1-2-...-N-...-2-1)
+- ✅ Tryb Kolumna: pojedynczy słupek, przyciski +/- zmieniają liczbę klocków o 1
 - ✅ Auto-zoom dostosowujący widok do liczby kolumn
 - ✅ 3D rotacja myszką (OrbitControls)
 - ✅ Liczby nad kolumnami (1..N)
-- ✅ Wyświetlacz sumy bloków: N × (N+1) / 2 (kwadrat: A + B = C, sześcian: N² × N = N³)
+- ✅ Wyświetlacz sumy bloków: N × (N+1) / 2 (kolumna: M = N, kwadrat: A + B = C, sześcian: N² × N = N³)
 - ✅ Responsywny UI na mobile i desktop
 
 ### Kolory i Obramowanie (Phase 1 - 2026)
@@ -194,7 +195,7 @@ Refaktoryzacja Phase 1 - System konfiguracji i obramowanie krawędziowe:
 - ✅ Początko stan: 5 kolumn, 15 bloków
 - ✅ Przycisk +: dodaje kolumny
 - ✅ Przycisk -: usuwa kolumny do minimum 1 (1 blok)
-- ✅ Przycisk trybu: przełącza Schody → Kwadraty → Sześciany
+- ✅ Przycisk trybu: przełącza Schody → Kolumna → Kwadraty → Sześciany → Piramida
 - ✅ Auto-zoom: prawidłowo dostosowuje widok
 - ✅ 3D rotacja: płynne obroty myszką
 - ✅ Etykiety: bez duplikatów

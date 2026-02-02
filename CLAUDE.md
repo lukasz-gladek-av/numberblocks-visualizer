@@ -14,6 +14,7 @@ Dokument pomocniczy zawierający informacje o strukturze aplikacji, selektorach 
     <button id="btn-minus" class="btn btn-minus" aria-label="Usuń kolumnę">−</button>
     <div class="mode-toggle" aria-label="Tryb">
       <button id="btn-mode-stairs" class="btn btn-mode" aria-label="Tryb: Schody">[SVG]</button>
+      <button id="btn-mode-column" class="btn btn-mode" aria-label="Tryb: Kolumna">[SVG]</button>
       <button id="btn-mode-square" class="btn btn-mode" aria-label="Tryb: Kwadraty">[SVG]</button>
       <button id="btn-mode-cube" class="btn btn-mode" aria-label="Tryb: Sześciany">[SVG]</button>
       <button id="btn-mode-pyramid" class="btn btn-mode" aria-label="Tryb: Piramida">[SVG]</button>
@@ -25,10 +26,11 @@ Dokument pomocniczy zawierający informacje o strukturze aplikacji, selektorach 
 
 ### Kluczowe Selektory
 - `#threejs-canvas` - Główna scena 3D (Three.js renderer)
-- `#total-display` - Wyświetlacz suma: "X kolumn: Y klocków", "Y + K = N²", "N² × N = N³" lub "2N-1 kolumn: N² klocków"
+- `#total-display` - Wyświetlacz suma: "X kolumn: Y klocków", "Y + K = N²", "N² × N = N³", "2N-1 kolumn: N² klocków" lub "1 kolumn: N klocków"
 - `#btn-plus` (`.btn-plus`) - Przycisk dodaj kolumnę
 - `#btn-minus` (`.btn-minus`) - Przycisk usuń kolumnę
 - `#btn-mode-stairs` (`.btn-mode`) - Tryb Schody (SVG)
+- `#btn-mode-column` (`.btn-mode`) - Tryb Kolumna (SVG)
 - `#btn-mode-square` (`.btn-mode`) - Tryb Kwadraty (SVG)
 - `#btn-mode-cube` (`.btn-mode`) - Tryb Sześciany (SVG)
 - `#btn-mode-pyramid` (`.btn-mode`) - Tryb Piramida (SVG)
@@ -197,6 +199,7 @@ Auto-zoom kamery dostosowujący widok do liczby kolumn.
 #btn-plus.click() → staircase.addColumn()
 #btn-minus.click() → staircase.removeColumn()
 #btn-mode-stairs.click() → staircase.setMode('stairs')
+#btn-mode-column.click() → staircase.setMode('column')
 #btn-mode-square.click() → staircase.setMode('square')
 #btn-mode-cube.click() → staircase.setMode('cube')
 #btn-mode-pyramid.click() → staircase.setMode('pyramid')
@@ -209,12 +212,13 @@ Auto-zoom kamery dostosowujący widok do liczby kolumn.
 - **Zoom:** Scroll na canvas
 - **Dodaj kolumnę:** Klik na `#btn-plus`
 - **Usuń kolumnę:** Klik na `#btn-minus` (limit min 1)
-- **Tryb:** Klik na ikonę w `mode-toggle` (Schody / Kwadraty / Sześciany / Piramida)
+- **Tryb:** Klik na ikonę w `mode-toggle` (Schody / Kolumna / Kwadraty / Sześciany / Piramida)
+- **Tryb Kolumna:** Jeden słupek, a przyciski +/- zmieniają liczbę klocków o 1
 
 ### Wyświetlane Informacje
 - Liczby nad kolumnami (1, 2, 3, ... N)
-- Suma bloków w `#total-display`: "N kolumn: M klocków", "M + K = N²" lub "N² × N = N³"
-- Formula: M = N × (N + 1) / 2 (kwadraty: M + K = N², sześciany: N² × N = N³)
+- Suma bloków w `#total-display`: "N kolumn: M klocków", "M + K = N²", "N² × N = N³", "2N-1 kolumn: N² klocków" lub "1 kolumn: N klocków"
+- Formula: M = N × (N + 1) / 2 (kwadraty: M + K = N², sześciany: N² × N = N³, kolumna: M = N)
 
 ## 🚀 GitHub Pages (build)
 

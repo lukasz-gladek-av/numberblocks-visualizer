@@ -4,10 +4,11 @@ import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js';
 import { createColumnFromBlocks, getBlocksForNumber } from './blocks.js';
 
 const MODE_STAIRS = 'stairs';
+const MODE_COLUMN = 'column';
 const MODE_SQUARE = 'square';
 const MODE_CUBE = 'cube';
 const MODE_PYRAMID = 'pyramid';
-const MODE_ORDER = [MODE_STAIRS, MODE_SQUARE, MODE_CUBE, MODE_PYRAMID];
+const MODE_ORDER = [MODE_STAIRS, MODE_COLUMN, MODE_SQUARE, MODE_CUBE, MODE_PYRAMID];
 
 /**
  * Staircase class - manages the entire step squad structure
@@ -66,14 +67,14 @@ export class Staircase {
     for (let i = 1; i <= columnCount; i++) {
       const positionX = startX + (i - 1) * columnSpacing;
       const blockCount = this.getColumnBlockCount(i);
-      const labelValue = this.mode === MODE_PYRAMID ? blockCount : i;
+      const labelValue = (this.mode === MODE_PYRAMID || this.mode === MODE_COLUMN) ? blockCount : i;
       this.addColumnLabel(labelValue, positionX, blockCount, labelZ);
     }
   }
 
   /**
    * Build the staircase for a given number N
-   * @param {number} n - The number of columns to create
+   * @param {number} n - The number of columns or blocks (mode dependent)
    */
   build(n) {
     // Clear existing columns
@@ -91,13 +92,16 @@ export class Staircase {
     const startZ = -totalDepth / 2;
     const isCubeMode = this.mode === MODE_CUBE;
     const isPyramidMode = this.mode === MODE_PYRAMID;
+    const isColumnMode = this.mode === MODE_COLUMN;
     const shouldFillToSquare = this.mode === MODE_SQUARE || isCubeMode;
     const columnBlocksCache = new Map();
 
     for (let i = 1; i <= columnCount; i++) {
       let baseBlocks = [];
       let extraBlocks = [];
-      if (isPyramidMode) {
+      if (isColumnMode) {
+        baseBlocks = getBlocksForNumber(n);
+      } else if (isPyramidMode) {
         const columnHeight = i <= n ? i : (2 * n - i);
         baseBlocks = getBlocksForNumber(columnHeight);
       } else {
@@ -204,7 +208,7 @@ export class Staircase {
   }
 
   /**
-   * Add one more column (increment N)
+   * Increment N by 1 (column count or block count depending on mode)
    */
   addColumn() {
     this.build(this.currentN + 1);
@@ -212,7 +216,7 @@ export class Staircase {
   }
 
   /**
-   * Remove the last column (decrement N)
+   * Decrement N by 1 (column count or block count depending on mode)
    */
   removeColumn() {
     if (this.currentN > 1) {
@@ -228,6 +232,9 @@ export class Staircase {
    * @returns {number}
    */
   getTotal() {
+    if (this.mode === MODE_COLUMN) {
+      return this.currentN;
+    }
     return (this.currentN * (this.currentN + 1)) / 2;
   }
 
@@ -256,6 +263,9 @@ export class Staircase {
   }
 
   getColumnCount(n = this.currentN) {
+    if (this.mode === MODE_COLUMN) {
+      return 1;
+    }
     return this.mode === MODE_PYRAMID ? n * 2 - 1 : n;
   }
 
