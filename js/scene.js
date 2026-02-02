@@ -1,8 +1,9 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
-let scene, camera, renderer, controls;
+let scene, camera, renderer, controls, ground;
 let animationFrameId;
+const GROUND_BASE_SIZE = 120;
 
 /**
  * Initialize the Three.js scene, camera, renderer, and lighting
@@ -128,7 +129,7 @@ export function initScene() {
   scene.add(directionalLight);
 
   // Ground plane with gradient texture
-  const groundGeometry = new THREE.PlaneGeometry(120, 120);
+  const groundGeometry = new THREE.PlaneGeometry(GROUND_BASE_SIZE, GROUND_BASE_SIZE);
 
   // Create gradient texture with noise
   const gradientCanvas = document.createElement('canvas');
@@ -217,7 +218,7 @@ export function initScene() {
     emissive: 0x3aa83a,
     emissiveIntensity: 0.1,
   });
-  const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+  ground = new THREE.Mesh(groundGeometry, groundMaterial);
   ground.rotation.x = -Math.PI / 2;
   ground.receiveShadow = true;
   scene.add(ground);
@@ -329,6 +330,7 @@ export function adjustCameraForColumns(columnCount, depthCount = 1, maxHeightBlo
 
   // Use the larger distance needed
   const distance = Math.max(distanceForHeight, distanceForWidth, distanceForDepth, 15) * 1.2;
+  const safeDistance = distance * 1.05;
 
   // Adjust camera height to look at optimal point of the staircase
   // For small counts stay at 4.5, for larger counts move up to center of staircase
@@ -338,7 +340,29 @@ export function adjustCameraForColumns(columnCount, depthCount = 1, maxHeightBlo
 
   // Only adjust distance from current viewing direction, don't change angle
   const direction = camera.position.clone().sub(controls.target).normalize();
-  camera.position.copy(controls.target).addScaledVector(direction, distance);
+  camera.position.copy(controls.target).addScaledVector(direction, safeDistance);
+
+  // Ensure the camera and controls can handle very large structures
+  controls.maxDistance = Math.max(50, safeDistance * 1.6);
+  const farPlane = Math.max(1000, safeDistance * 4);
+  const nearPlane = Math.max(0.1, farPlane / 10000);
+  if (camera.far !== farPlane || camera.near !== nearPlane) {
+    camera.far = farPlane;
+    camera.near = nearPlane;
+    camera.updateProjectionMatrix();
+  }
+
+  if (scene?.fog) {
+    scene.fog.near = Math.max(50, safeDistance * 0.9);
+    scene.fog.far = Math.max(100, safeDistance * 3);
+  }
+
+  if (ground) {
+    const margin = Math.max(10, maxHorizontal * 0.25);
+    const targetSize = maxHorizontal + margin * 2;
+    const scale = Math.max(1, targetSize / GROUND_BASE_SIZE);
+    ground.scale.set(scale, scale, 1);
+  }
 
   controls.update();
 }
