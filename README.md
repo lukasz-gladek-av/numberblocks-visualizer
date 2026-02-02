@@ -1,213 +1,86 @@
 # Numberblocks Step Squad 3D Visualization
 [![Build Pages](https://github.com/lukasz-gladek-av/numberblocks-visualizer/actions/workflows/build-pages.yml/badge.svg)](https://github.com/lukasz-gladek-av/numberblocks-visualizer/actions/workflows/build-pages.yml)
 
-Live demo: https://lukasz-gladek-av.github.io/numberblocks-visualizer/
+[Live demo](https://lukasz-gladek-av.github.io/numberblocks-visualizer/)
 
-Interaktywna edukacyjna aplikacja 3D pokazująca "step squad" z Numberblocks - schody złożone z kolorowych klocków, gdzie dla liczby N wyświetlamy kolumny od 1 do N bloków (oraz tryb pojedynczej kolumny).
+An interactive 3D educational visualization of the Numberblocks "step squad". For a number N, the scene renders columns from 1 to N blocks, plus additional modes for different arrangements.
 
-## Funkcjonalności
+## Features
+- 3D staircase visualization with N columns (1..N blocks)
+- Modes: Staircase, Column, Squares, Cubes, Pyramid (1..N..1)
+- Add/remove columns with +/- controls (min 1)
+- Auto-zoom camera to fit the current layout
+- Mouse rotation with OrbitControls
+- Column labels (1..N)
+- Total blocks display (e.g. N × (N+1) / 2)
+- Responsive UI for mobile and desktop
 
-### Core
-- ✅ Wizualizacja 3D schodów (N kolumn, od 1 do N bloków)
-- ✅ Przycisk + dodawania kolumn
-- ✅ Przycisk - odejmowania kolumn (min 1)
-- ✅ Przycisk trybu: Schody → Kolumna → Kwadraty → Sześciany → Piramida (1-2-...-N-...-2-1)
-- ✅ Tryb Kolumna: pojedynczy słupek, przyciski +/- zmieniają liczbę klocków o 1
-- ✅ Auto-zoom dostosowujący widok do liczby kolumn
-- ✅ 3D rotacja myszką (OrbitControls)
-- ✅ Liczby nad kolumnami (1..N)
-- ✅ Wyświetlacz sumy bloków: N × (N+1) / 2 (kolumna: M = N, kwadrat: A + B = C, sześcian: N² × N = N³)
-- ✅ Responsywny UI na mobile i desktop
+## Color and Border Rules
+- Official Numberblocks colors for 1-20 and a tens-based scheme for 20-99
+- Special case 7: rainbow (7 distinct colors)
+- Special case 9: gray gradient (three levels)
+- Special case 10: white with red border
+- Special case 11-19: 10 + ones (place-value decomposition)
+- Special case 20: apricot with orange border
+- Borders are rendered as thin rounded frames and do not intersect blocks or cast artifacts
 
-### Kolory i Obramowanie (Phase 1 - 2026)
-- ✅ Oficjalne kolory Numberblocks dla liczb 1-20 oraz schemat dziesiatek (20-99)
-- ✅ Liczba 7: efekt tęczowy (7 różnych kolorów)
-- ✅ Liczba 9: gradient szary (3 skupienia ciemności)
-- ✅ Liczba 10: biały z czerwonym obramowaniem
-- ✅ Liczba 20: piaskowy/apricot z pomarańczowym obramowaniem
-- ✅ Liczby nastoletnie (11-19): rozłożenie na 10+jednostki z właściwymi kolorami
-- ✅ Obramowanie krawędziowe (12 linii) wokół grup bloków tego samego koloru
-- ✅ Obramowanie nie przenika przez bloki - czysty efekt wizualny
+All number definitions live in `js/numberblockConfig.js`.
 
-### Przyszłe (Phase 2)
-- [ ] Twarze (oczy, usta) dla każdej liczby
-- [ ] Akcesoria (okulary, kapelusze)
-- [ ] Wyrażenia twarzy
+## Tech Stack
+- Three.js
+- Vite
+- ES modules
 
-## Struktura projektu
-
+## Project Structure
 ```
 numberblock_step_squad/
-├── index.html                  # Główny plik HTML
-├── package.json                # Zależności (three.js, vite)
+├── index.html                  # Single-page entry
+├── package.json                # Dependencies and scripts
 ├── styles/
-│   └── main.css               # Style UI i responsywność
+│   └── main.css                # UI styles and responsiveness
 ├── js/
-│   ├── main.js                # Entry point
-│   ├── scene.js               # Three.js setup, kamera, renderer
-│   ├── staircase.js           # Zarządzanie strukturą schodów
-│   ├── blocks.js              # createBlock(), createColumn() - tworzenie z BorderFrame
-│   ├── numberblockConfig.js   # Konfiguracja liczb 1-99 (Phase 1+)
-│   ├── colors.js              # Schemat kolorów (re-export config system)
-│   ├── faces.js               # Placeholder dla twarzy (Phase 2)
-│   └── controls.js            # UI interakcje i handlery
-└── .gitignore                 # Ignorowane pliki
+│   ├── main.js                # App bootstrap
+│   ├── scene.js               # Three.js setup (scene, camera, renderer)
+│   ├── staircase.js           # Staircase layout management
+│   ├── blocks.js              # Block and column creation
+│   ├── numberblockConfig.js   # Number definitions and colors
+│   ├── colors.js              # Color utilities
+│   ├── faces.js               # Placeholder for Phase 2 features
+│   └── controls.js            # UI interactions
+└── .gitignore
 ```
 
-## Uruchamianie
-
-### Pierwszy raz
+## Getting Started
 ```bash
 npm install
 npm run dev
 ```
+Open `http://localhost:5173/` in your browser.
 
-### Następne sesje
+## Production Build
 ```bash
-npm run dev
+npm run build
+npm run preview
 ```
 
-Aplikacja będzie dostępna na `http://localhost:5173/`
-
-## GitHub Pages (ważne)
-
-Przed każdym commitem, który ma trafić na Pages, uruchom build i dodaj wygenerowany katalog:
-
+## GitHub Pages
+This repo is configured to serve from `docs/` on the `master` branch. Before deploying, run:
 ```bash
 npm run build
 ```
+Then commit the updated `docs/` directory.
 
-Commit powinien zawierać zaktualizowany `docs/` (Pages korzysta z `master:/docs`).
+## Configuration Pointers
+- Number definitions and color rules: `js/numberblockConfig.js`
+- Scene and camera settings: `js/scene.js`
+- Staircase layout logic: `js/staircase.js`
+- UI controls: `js/controls.js`
+- Styling: `styles/main.css`
 
-## Build do produkcji
-```bash
-npm run build
-```
-
-## Kolory Numberblocks (Oficjalne - Phase 1)
-
-### Liczby 1-9 (Jednostki)
-| Liczba | Kolor | Hex | Obramowanie |
-|--------|-------|-----|-------------|
-| 1 | Red | #FF2E3B | — |
-| 2 | Orange | #FF8C00 | — |
-| 3 | Yellow | #FFD700 | — |
-| 4 | Green | #32CD32 | — |
-| 5 | Cyan | #00BFFF | — |
-| 6 | Indigo | #7B68EE | — |
-| 7 | **Rainbow** | Red, Orange, Yellow, Green, Cyan, Indigo, Magenta | — |
-| 8 | Magenta | #FF69B4 | — |
-| 9 | **Grey Gradient** | Light → Medium → Dark | — |
-
-### Liczby 10 i wyżej
-| Liczba | Bloki | Obramowanie |
-|--------|-------|-------------|
-| 10 | White #FFFFFF | Red #FF2E3B (pelna ramka) |
-| 11-19 | 10 White + jednostki | Red border (część 10) |
-| 20 | Apricot #FFCC99 | Orange #FF8C00 (pelna ramka) |
-
-### Notatka
-Liczby nastoletnie (11-19) są rozkładane na komponenty:
-- Dolna część: 10 bloków białych z czerwonym obramowaniem
-- Górna część: Bloki odpowiadające cyfrze jednostek (np. 14 = 10 białych + 4 zielone)
-
-## Implementacja - Kluczowe decyzje (Phase 1)
-
-### 1. System Konfiguracji Oparty na Obiektach
-`numberblockConfig.js` zawiera pelne definicje dla liczb 1-99:
-```javascript
-getNumberblockConfig(number) → {
-  number,
-  displayName: "Name",
-  blocks: [ { color, borderColor, blockType }, ... ],
-  face: { eyeCount, eyeShape, eyeColor, ... } // Phase 2
-}
-```
-
-Każdy blok w konfiguracji ma:
-- `color` (hex) - kolor bloku
-- `borderColor` (hex | null) - kolor obramowania grupy (null = bez obramowania)
-- `blockType` (string) - typ bloku ('one' dla jednotek, 'ten' dla dziesiątek)
-
-### 2. Rozklad Liczb (Place-Value Decomposition)
-Liczby 11-19 są zbudowane przez konkatenację:
-```javascript
-// Przykład: 14 = Ten + Four
-const tenBlocks = createSolidBlocks(10, WHITE, RED_BORDER);
-const oneBlocks = getOneBlocksForNumber(4); // Green blocks
-return { blocks: [...tenBlocks, ...oneBlocks] };
-```
-
-### 3. Obramowanie (Solidne Ściany)
-Obramowanie tworzy się z cienkich brył z lekkim zaokrągleniem (RoundedBoxGeometry):
-- Boki + góra/dół grupy (bez frontu/tyłu)
-- Grubość ramki: 0.06, wsunięta do środka (nie wychodzi poza klocki)
-- Bloki w grupie z obramowaniem są minimalnie pomniejszane (0.99)
-- Cienie dla ramki są wyłączone, aby uniknąć artefaktów
-
-### 4. Wydajność (Cache geometrii i materiałów)
-- Geometrie bloków i obramowań są współdzielone między kolumnami
-- Materiały są cache'owane per kolor, co ogranicza liczbę alokacji
-- Elementy obramowań nie rzucają cieni, by zmniejszyć koszt renderingu
-- Tryb sześcianu renderuje tylko zewnętrzną powłokę (bez niewidocznych bloków wewnątrz)
-
-### 5. Pozycjonowanie bloków
-Wszystkie bloki są prawidłowo pozycjonowane na ziemi (y=0). Wysokość bloku wynosi 0.9 jednostki, z 0.01 jednostkami przerwy między blokami.
-
-### 6. Auto-zoom
-Funkcja `adjustCameraForColumns()` w `scene.js` dostosowuje pozycję kamery na podstawie liczby kolumn, aby zawsze wszystkie kolumny były widoczne.
-
-## Możliwości rozszerzenia (todo)
-
-- [ ] Animacje dodawania/usuwania kolumn (GSAP)
-- [ ] Dźwięki przy kliknięciu
-- [ ] Tryb demonstracyjny pokazujący wzór (1+2+3+...=suma)
-- [ ] Export do PNG
-- [ ] Różne układy (trójkąt, inne kształty)
-- [ ] Ciemny motyw
-- [ ] Różne poziomy trudności/zakresy liczb
-
-## Git history
-
-```
-c7231f1 - Refactor columns to object-based config system with border support
-7591296 - Initial implementation: Numberblocks Step Squad 3D Visualization
-```
-
-### Ostatnia refaktoryzacja (c7231f1 - 2026-01-17)
-Refaktoryzacja Phase 1 - System konfiguracji i obramowanie krawędziowe:
-- Nowy system: `numberblockConfig.js` z pełnymi definicjami liczb 1-20
-- Obsługa specjalnych liczb: 7 (rainbow), 9 (grey gradient), 10 (white+red), 20 (apricot+orange)
-- Rozkład liczb nastoletnih: 11-19 = 10 + jednostki
-- Obramowanie zmienione na solidne ściany z RoundedBoxGeometry (boki + góra/dół)
-- Pliki dodane: `numberblockConfig.js`, `faces.js` (placeholder Phase 2)
-
-## Testy
-
-### Phase 1 - Kolory i Obramowanie (c7231f1)
-- ✅ Liczba 1: Red (#FF2E3B)
-- ✅ Liczba 7: Rainbow - 7 różnych kolorów (Red, Orange, Yellow, Green, Cyan, Indigo, Magenta)
-- ✅ Liczba 9: Grey Gradient - 3 skupienia (3 light, 3 medium, 3 dark)
-- ✅ Liczba 10: White (#FFFFFF) z czerwonym obramowaniem (12 krawędzi)
-- ✅ Liczba 14: 10 białych + 4 zielone (rozkład place-value)
-- ✅ Liczba 20: Apricot (#FFCC99) z pomarańczowym obramowaniem
-- ✅ Obramowanie jest pełne, nie wychodzi poza klocki i nie migocze
-- ✅ Początko stan: 5 kolumn, 15 bloków
-- ✅ Przycisk +: dodaje kolumny
-- ✅ Przycisk -: usuwa kolumny do minimum 1 (1 blok)
-- ✅ Przycisk trybu: przełącza Schody → Kolumna → Kwadraty → Sześciany → Piramida
-- ✅ Auto-zoom: prawidłowo dostosowuje widok
-- ✅ 3D rotacja: płynne obroty myszką
-- ✅ Etykiety: bez duplikatów
-- ✅ Pozycjonowanie: bloki na ziemi, nie zagłębiające się
-
-## Kontakt / Uwagi
-
-Projekt wykonany z Three.js i Vite. Patrz komentarze w kodzie źródłowym.
-Liczby 20-99 sa budowane analogicznie:
-```javascript
-// Przyklad: 34 = 30 + 4
-const tensBlocks = createSolidBlocks(30, TENS_BASE, TENS_BORDER);
-const oneBlocks = getOneBlocksForNumber(4);
-return { blocks: [...tensBlocks, ...oneBlocks] };
-```
+## Roadmap
+- Faces and expressions for each number
+- Accessories (glasses, hats)
+- Add/remove animations and click sounds
+- Export to PNG
+- Additional layout shapes
+- Optional dark theme
