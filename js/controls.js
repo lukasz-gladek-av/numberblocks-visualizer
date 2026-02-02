@@ -7,6 +7,7 @@ export function setupControls(staircase, updateCallback, adjustCameraCallback) {
   // Button elements
   const btnPlus = document.getElementById('btn-plus');
   const btnMinus = document.getElementById('btn-minus');
+  const btnReset = document.getElementById('btn-reset');
   const btnModeStairs = document.getElementById('btn-mode-stairs');
   const btnModeColumn = document.getElementById('btn-mode-column');
   const btnModeSquare = document.getElementById('btn-mode-square');
@@ -54,6 +55,20 @@ export function setupControls(staircase, updateCallback, adjustCameraCallback) {
   // Minus button - decrement N
   btnMinus.addEventListener('click', () => {
     scheduleDelta(-1);
+  });
+
+  btnReset.addEventListener('click', () => {
+    pendingDelta = 0;
+    if (applyRaf !== null) {
+      cancelAnimationFrame(applyRaf);
+      applyRaf = null;
+    }
+    staircase.reset();
+    updateTotalDisplay(staircase, totalDisplay);
+    if (adjustCameraCallback) {
+      adjustCameraCallback(staircase.getColumnCount(), staircase.getDepthCount(), staircase.getCurrentN());
+    }
+    updateCallback?.();
   });
 
   btnModeStairs.addEventListener('click', () => {
@@ -109,6 +124,7 @@ export function setupControls(staircase, updateCallback, adjustCameraCallback) {
   // Touch-friendly additions
   addTouchFeedback(btnPlus);
   addTouchFeedback(btnMinus);
+  addTouchFeedback(btnReset);
   addTouchFeedback(btnModeStairs);
   addTouchFeedback(btnModeColumn);
   addTouchFeedback(btnModeSquare);

@@ -16,6 +16,7 @@ const MODE_ORDER = [MODE_STAIRS, MODE_COLUMN, MODE_SQUARE, MODE_CUBE, MODE_PYRAM
 export class Staircase {
   constructor(scene, initialN = 5) {
     this.scene = scene;
+    this.initialN = initialN;
     this.currentN = initialN;
     this.columns = [];
     this.group = new THREE.Group(); // Container for all columns
@@ -30,6 +31,14 @@ export class Staircase {
 
     // Build initial staircase
     this.build(initialN);
+  }
+
+  /**
+   * Reset to the initial N (mode is preserved)
+   */
+  reset() {
+    this.build(this.initialN);
+    return true;
   }
 
   /**
