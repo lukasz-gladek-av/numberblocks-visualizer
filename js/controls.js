@@ -13,33 +13,47 @@ export function setupControls(staircase, updateCallback, adjustCameraCallback) {
   const btnModeCube = document.getElementById('btn-mode-cube');
   const btnModePyramid = document.getElementById('btn-mode-pyramid');
   const totalDisplay = document.getElementById('total-display');
+  let pendingDelta = 0;
+  let applyRaf = null;
+
+  const applyPendingDelta = () => {
+    applyRaf = null;
+    if (pendingDelta === 0) {
+      return;
+    }
+    const currentN = staircase.getCurrentN();
+    const targetN = Math.max(1, currentN + pendingDelta);
+    pendingDelta = 0;
+    if (targetN === currentN) {
+      return;
+    }
+    staircase.build(targetN);
+    updateTotalDisplay(staircase, totalDisplay);
+    if (adjustCameraCallback) {
+      adjustCameraCallback(staircase.getColumnCount(), staircase.getDepthCount(), staircase.getCurrentN());
+    }
+    updateCallback?.();
+  };
+
+  const scheduleDelta = (delta) => {
+    pendingDelta += delta;
+    if (applyRaf === null) {
+      applyRaf = requestAnimationFrame(applyPendingDelta);
+    }
+  };
 
   // Initialize total display
   updateTotalDisplay(staircase, totalDisplay);
   updateModeButtons(staircase, { btnModeStairs, btnModeColumn, btnModeSquare, btnModeCube, btnModePyramid });
 
-  // Plus button - add column
+  // Plus button - increment N
   btnPlus.addEventListener('click', () => {
-    const success = staircase.addColumn();
-    if (success) {
-      updateTotalDisplay(staircase, totalDisplay);
-      if (adjustCameraCallback) {
-        adjustCameraCallback(staircase.getColumnCount(), staircase.getDepthCount(), staircase.getCurrentN());
-      }
-      updateCallback?.();
-    }
+    scheduleDelta(1);
   });
 
-  // Minus button - remove column
+  // Minus button - decrement N
   btnMinus.addEventListener('click', () => {
-    const success = staircase.removeColumn();
-    if (success) {
-      updateTotalDisplay(staircase, totalDisplay);
-      if (adjustCameraCallback) {
-        adjustCameraCallback(staircase.getColumnCount(), staircase.getDepthCount(), staircase.getCurrentN());
-      }
-      updateCallback?.();
-    }
+    scheduleDelta(-1);
   });
 
   btnModeStairs.addEventListener('click', () => {
