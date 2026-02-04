@@ -4,8 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Numberblocks Step Squad 3D</title>
-  <script type="module" crossorigin src="/numberblocks-visualizer/assets/index-B-16CxFv.js"></script>
-  <link rel="stylesheet" crossorigin href="/numberblocks-visualizer/assets/index-C1czMNuf.css">
+  <script type="module" crossorigin src="/numberblocks-visualizer/assets/index-Due3aNNv.js"></script>
+  <link rel="stylesheet" crossorigin href="/numberblocks-visualizer/assets/index-BjclEx1X.css">
 </head>
 <body>
   <!-- Three.js Canvas -->
@@ -19,10 +19,23 @@
     <!-- Control Buttons -->
     <div class="controls">
       <button id="btn-minus" class="btn btn-minus" aria-label="Usuń kolumnę">−</button>
+      <button id="btn-reset" class="btn btn-reset" aria-label="Resetuj liczbę">
+        <svg class="reset-icon" viewBox="0 0 64 64" role="img" aria-hidden="true">
+          <path d="M48 30a16 16 0 1 1-6-12" />
+          <polyline points="42 10 44 22 32 20" />
+        </svg>
+      </button>
       <div class="mode-toggle" aria-label="Tryb">
         <button id="btn-mode-stairs" class="btn btn-mode" aria-label="Tryb: Schody" aria-pressed="true">
           <svg class="mode-icon" viewBox="0 0 64 64" role="img" aria-hidden="true">
             <polyline points="10 50 26 50 26 38 40 38 40 26 54 26" />
+          </svg>
+        </button>
+        <button id="btn-mode-column" class="btn btn-mode" aria-label="Tryb: Kolumna" aria-pressed="false">
+          <svg class="mode-icon" viewBox="0 0 64 64" role="img" aria-hidden="true">
+            <rect x="25" y="10" width="14" height="14" rx="3" />
+            <rect x="25" y="26" width="14" height="14" rx="3" />
+            <rect x="25" y="42" width="14" height="14" rx="3" />
           </svg>
         </button>
         <button id="btn-mode-square" class="btn btn-mode" aria-label="Tryb: Kwadraty" aria-pressed="false">
