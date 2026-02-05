@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js';
 import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js';
-import { createColumnFromBlocks, getBlocksForNumber } from './blocks.js';
+import { buildGlobalSolidInstancedMeshes, createColumnFromBlocks, getBlocksForNumber } from './blocks.js';
 
 const MODE_STAIRS = 'stairs';
 const MODE_COLUMN = 'column';
@@ -25,6 +25,7 @@ export class Staircase {
     this.currentN = initialN;
     this.columns = [];
     this.extraGroups = [];
+    this.globalSolidMeshes = [];
     this.group = new THREE.Group(); // Container for all columns
     this.labelGroup = new THREE.Group(); // Container for column labels
     this.scene.add(this.group);
@@ -109,6 +110,8 @@ export class Staircase {
     this.columns = [];
     this.extraGroups.forEach(group => this.group.remove(group));
     this.extraGroups = [];
+    this.globalSolidMeshes.forEach(mesh => this.group.remove(mesh));
+    this.globalSolidMeshes = [];
     this.sneezePieces = [];
     this.sneezeAnimation = null;
     this.pendingSneezeRebuild = false;
@@ -131,6 +134,7 @@ export class Staircase {
     const sneezeZOffset = this.sneezeTargetOffset;
     const animateSneeze = shouldSneezeSquare && options.animateSneeze;
     const columnBlocksCache = new Map();
+    const globalSolidCollector = new Map();
 
     for (let i = 1; i <= columnCount; i++) {
       let baseBlocks = [];
@@ -184,9 +188,9 @@ export class Staircase {
           columnConfig.blocks,
           positionX,
           count,
-          columnConfig.indices
+          columnConfig.indices,
+          { positionZ, globalSolidCollector }
         );
-        column.position.z = positionZ;
         column.castShadow = true;
         column.receiveShadow = true;
 
@@ -228,6 +232,11 @@ export class Staircase {
         }
       }
     }
+
+    this.globalSolidMeshes = buildGlobalSolidInstancedMeshes(globalSolidCollector);
+    this.globalSolidMeshes.forEach((mesh) => {
+      this.group.add(mesh);
+    });
 
     this.currentN = n;
     if (animateSneeze && this.sneezePieces.length > 0) {

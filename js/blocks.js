@@ -113,9 +113,43 @@ export function createColumn(columnNumber, positionX = 0, extraBlocks = []) {
   return createColumnFromBlocks(blocks, positionX, blocks.length);
 }
 
-export function createColumnFromBlocks(blocks, positionX = 0, blockCountOverride = null, blockIndices = null) {
+function addToGlobalSolidCollector(globalSolidCollector, color, x, y, z) {
+  const key = String(color);
+  if (!globalSolidCollector.has(key)) {
+    globalSolidCollector.set(key, { color, positions: [] });
+  }
+  globalSolidCollector.get(key).positions.push({ x, y, z });
+}
+
+export function buildGlobalSolidInstancedMeshes(globalSolidCollector) {
+  if (!globalSolidCollector || globalSolidCollector.size === 0) {
+    return [];
+  }
+  const meshes = [];
+  const tempMatrix = new THREE.Matrix4();
+  const tempPosition = new THREE.Vector3();
+  const tempQuaternion = new THREE.Quaternion();
+  const tempScale = new THREE.Vector3(1, 1, 1);
+
+  globalSolidCollector.forEach(({ color, positions }) => {
+    const instancedBlocks = new THREE.InstancedMesh(BLOCK_GEOMETRY, getBlockMaterial(color), positions.length);
+    instancedBlocks.castShadow = true;
+    instancedBlocks.receiveShadow = true;
+    positions.forEach((position, instanceIndex) => {
+      tempPosition.set(position.x, position.y, position.z);
+      tempMatrix.compose(tempPosition, tempQuaternion, tempScale);
+      instancedBlocks.setMatrixAt(instanceIndex, tempMatrix);
+    });
+    instancedBlocks.instanceMatrix.needsUpdate = true;
+    meshes.push(instancedBlocks);
+  });
+  return meshes;
+}
+
+export function createColumnFromBlocks(blocks, positionX = 0, blockCountOverride = null, blockIndices = null, options = {}) {
+  const { positionZ = 0, globalSolidCollector = null } = options;
   const column = new THREE.Group();
-  const solidBlocksByColor = new Map();
+  const solidBlocksByColor = globalSolidCollector ? null : new Map();
   const tempMatrix = new THREE.Matrix4();
   const tempPosition = new THREE.Vector3();
   const tempQuaternion = new THREE.Quaternion();
@@ -135,6 +169,11 @@ export function createColumnFromBlocks(blocks, positionX = 0, blockCountOverride
       return;
     }
 
+    if (globalSolidCollector) {
+      addToGlobalSolidCollector(globalSolidCollector, blockConfig.color, positionX, yPosition, positionZ);
+      return;
+    }
+
     const colorKey = String(blockConfig.color);
     if (!solidBlocksByColor.has(colorKey)) {
       solidBlocksByColor.set(colorKey, {
@@ -145,18 +184,20 @@ export function createColumnFromBlocks(blocks, positionX = 0, blockCountOverride
     solidBlocksByColor.get(colorKey).yPositions.push(yPosition);
   });
 
-  solidBlocksByColor.forEach(({ color, yPositions }) => {
-    const instancedBlocks = new THREE.InstancedMesh(BLOCK_GEOMETRY, getBlockMaterial(color), yPositions.length);
-    instancedBlocks.castShadow = true;
-    instancedBlocks.receiveShadow = true;
-    yPositions.forEach((yPosition, instanceIndex) => {
-      tempPosition.set(0, yPosition, 0);
-      tempMatrix.compose(tempPosition, tempQuaternion, tempScale);
-      instancedBlocks.setMatrixAt(instanceIndex, tempMatrix);
+  if (!globalSolidCollector) {
+    solidBlocksByColor.forEach(({ color, yPositions }) => {
+      const instancedBlocks = new THREE.InstancedMesh(BLOCK_GEOMETRY, getBlockMaterial(color), yPositions.length);
+      instancedBlocks.castShadow = true;
+      instancedBlocks.receiveShadow = true;
+      yPositions.forEach((yPosition, instanceIndex) => {
+        tempPosition.set(0, yPosition, 0);
+        tempMatrix.compose(tempPosition, tempQuaternion, tempScale);
+        instancedBlocks.setMatrixAt(instanceIndex, tempMatrix);
+      });
+      instancedBlocks.instanceMatrix.needsUpdate = true;
+      column.add(instancedBlocks);
     });
-    instancedBlocks.instanceMatrix.needsUpdate = true;
-    column.add(instancedBlocks);
-  });
+  }
 
   // Now identify groups of consecutive blocks with same color and borderColor
   // and add borders around entire groups
@@ -224,6 +265,7 @@ export function createColumnFromBlocks(blocks, positionX = 0, blockCountOverride
 
   // Position the column horizontally
   column.position.x = positionX;
+  column.position.z = positionZ;
 
   column.userData.blockCount = blockCountOverride ?? blocks.length;
   column.position.y = 0; // Bottom aligned at ground level
