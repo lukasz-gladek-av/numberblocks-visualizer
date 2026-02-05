@@ -18,8 +18,43 @@ setupControls(staircase, () => {
   // Optional callback for updates
 }, adjustCameraForColumns);
 
+const renderGameToText = () => {
+  const mode = staircase.getMode();
+  const n = staircase.getCurrentN();
+  const state = {
+    mode,
+    n,
+    squareSneeze: staircase.getSquareSneeze(),
+    counts: {
+      columnCount: staircase.getColumnCount(),
+      depthCount: staircase.getDepthCount(),
+      total: staircase.getTotal(),
+      squareTotal: staircase.getSquareTotal(),
+      squareFill: staircase.getSquareFillTotal(),
+      squareSneezeTotal: staircase.getSquareSneezeTotal(),
+      cubeTotal: staircase.getCubeTotal(),
+      pyramidTotal: staircase.getPyramidTotal(),
+    },
+    coordinateSystem: 'x across columns, y up, z depth; origin centered on columns; ground at y=0',
+  };
+  return JSON.stringify(state);
+};
+
+window.render_game_to_text = renderGameToText;
+
+window.advanceTime = async (ms) => {
+  const steps = Math.max(1, Math.round(ms / (1000 / 60)));
+  for (let i = 0; i < steps; i++) {
+    controls.update();
+    staircase.update(performance.now());
+    renderer.render(scene, camera);
+  }
+};
+
 // Start the animation loop
-animate(scene, camera, renderer, controls);
+animate(scene, camera, renderer, controls, () => {
+  staircase.update(performance.now());
+});
 
 console.log('Numberblocks Step Squad zainicjalizowana!');
 console.log(`Uruchomienie z ${staircase.getCurrentN()} kolumnami i ${staircase.getTotal()} klockami`);

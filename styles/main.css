@@ -170,6 +170,33 @@ canvas {
     inset 0 -7px 14px rgba(0, 0, 0, 0.24);
 }
 
+.btn-sneeze {
+  text-transform: uppercase;
+  font-size: 1.05rem;
+  letter-spacing: 1px;
+}
+
+.btn-sneeze.active {
+  box-shadow:
+    0 18px 32px rgba(12, 36, 76, 0.34),
+    0 0 0 4px rgba(255, 255, 255, 0.35),
+    inset 0 -7px 14px rgba(0, 0, 0, 0.2);
+  transform: translateY(-2px) scale(1.05);
+  filter: saturate(1.1);
+}
+
+.btn-sneeze:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+  box-shadow: 0 8px 18px rgba(10, 24, 40, 0.16);
+  transform: none;
+}
+
+.btn-sneeze:disabled:hover {
+  transform: none;
+  box-shadow: 0 8px 18px rgba(10, 24, 40, 0.16);
+}
+
 .mode-toggle {
   display: flex;
   gap: 10px;

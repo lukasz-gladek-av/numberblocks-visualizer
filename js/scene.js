@@ -259,12 +259,15 @@ function onWindowResize() {
  * @param {THREE.WebGLRenderer} rendererObj - The renderer
  * @param {OrbitControls} controlsObj - The controls
  */
-export function animate(sceneObj, cameraObj, rendererObj, controlsObj) {
+export function animate(sceneObj, cameraObj, rendererObj, controlsObj, updateCallback) {
   function loop() {
     animationFrameId = requestAnimationFrame(loop);
 
     // Update controls
     controlsObj.update();
+    if (updateCallback) {
+      updateCallback();
+    }
 
     // Render the scene
     rendererObj.render(sceneObj, cameraObj);

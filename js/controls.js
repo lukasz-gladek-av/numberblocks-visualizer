@@ -13,6 +13,7 @@ export function setupControls(staircase, updateCallback, adjustCameraCallback) {
   const btnModeSquare = document.getElementById('btn-mode-square');
   const btnModeCube = document.getElementById('btn-mode-cube');
   const btnModePyramid = document.getElementById('btn-mode-pyramid');
+  const btnSquareSneeze = document.getElementById('btn-square-sneeze');
   const totalDisplay = document.getElementById('total-display');
   let pendingDelta = 0;
   let applyRaf = null;
@@ -46,6 +47,7 @@ export function setupControls(staircase, updateCallback, adjustCameraCallback) {
   // Initialize total display
   updateTotalDisplay(staircase, totalDisplay);
   updateModeButtons(staircase, { btnModeStairs, btnModeColumn, btnModeSquare, btnModeCube, btnModePyramid });
+  updateSquareSneezeButton();
 
   // Plus button - increment N
   btnPlus.addEventListener('click', () => {
@@ -74,6 +76,7 @@ export function setupControls(staircase, updateCallback, adjustCameraCallback) {
   btnModeStairs.addEventListener('click', () => {
     staircase.setMode('stairs');
     updateModeButtons(staircase, { btnModeStairs, btnModeColumn, btnModeSquare, btnModeCube, btnModePyramid });
+    updateSquareSneezeButton();
     updateTotalDisplay(staircase, totalDisplay);
     if (adjustCameraCallback) {
       adjustCameraCallback(staircase.getColumnCount(), staircase.getDepthCount(), staircase.getCurrentN());
@@ -84,6 +87,7 @@ export function setupControls(staircase, updateCallback, adjustCameraCallback) {
   btnModeColumn.addEventListener('click', () => {
     staircase.setMode('column');
     updateModeButtons(staircase, { btnModeStairs, btnModeColumn, btnModeSquare, btnModeCube, btnModePyramid });
+    updateSquareSneezeButton();
     updateTotalDisplay(staircase, totalDisplay);
     if (adjustCameraCallback) {
       adjustCameraCallback(staircase.getColumnCount(), staircase.getDepthCount(), staircase.getCurrentN());
@@ -94,6 +98,7 @@ export function setupControls(staircase, updateCallback, adjustCameraCallback) {
   btnModeSquare.addEventListener('click', () => {
     staircase.setMode('square');
     updateModeButtons(staircase, { btnModeStairs, btnModeColumn, btnModeSquare, btnModeCube, btnModePyramid });
+    updateSquareSneezeButton();
     updateTotalDisplay(staircase, totalDisplay);
     if (adjustCameraCallback) {
       adjustCameraCallback(staircase.getColumnCount(), staircase.getDepthCount(), staircase.getCurrentN());
@@ -104,6 +109,7 @@ export function setupControls(staircase, updateCallback, adjustCameraCallback) {
   btnModeCube.addEventListener('click', () => {
     staircase.setMode('cube');
     updateModeButtons(staircase, { btnModeStairs, btnModeColumn, btnModeSquare, btnModeCube, btnModePyramid });
+    updateSquareSneezeButton();
     updateTotalDisplay(staircase, totalDisplay);
     if (adjustCameraCallback) {
       adjustCameraCallback(staircase.getColumnCount(), staircase.getDepthCount(), staircase.getCurrentN());
@@ -114,6 +120,20 @@ export function setupControls(staircase, updateCallback, adjustCameraCallback) {
   btnModePyramid.addEventListener('click', () => {
     staircase.setMode('pyramid');
     updateModeButtons(staircase, { btnModeStairs, btnModeColumn, btnModeSquare, btnModeCube, btnModePyramid });
+    updateSquareSneezeButton();
+    updateTotalDisplay(staircase, totalDisplay);
+    if (adjustCameraCallback) {
+      adjustCameraCallback(staircase.getColumnCount(), staircase.getDepthCount(), staircase.getCurrentN());
+    }
+    updateCallback?.();
+  });
+
+  btnSquareSneeze.addEventListener('click', () => {
+    if (!staircase.getSquareMode()) {
+      return;
+    }
+    staircase.toggleSquareSneeze();
+    updateSquareSneezeButton();
     updateTotalDisplay(staircase, totalDisplay);
     if (adjustCameraCallback) {
       adjustCameraCallback(staircase.getColumnCount(), staircase.getDepthCount(), staircase.getCurrentN());
@@ -130,8 +150,17 @@ export function setupControls(staircase, updateCallback, adjustCameraCallback) {
   addTouchFeedback(btnModeSquare);
   addTouchFeedback(btnModeCube);
   addTouchFeedback(btnModePyramid);
+  addTouchFeedback(btnSquareSneeze);
 
-  return { btnPlus, btnMinus, btnModeStairs, btnModeColumn, btnModeSquare, btnModeCube, btnModePyramid, totalDisplay };
+  function updateSquareSneezeButton() {
+    const isSquareMode = staircase.getSquareMode();
+    const isActive = staircase.getSquareSneeze();
+    btnSquareSneeze.disabled = !isSquareMode;
+    btnSquareSneeze.classList.toggle('active', isActive);
+    btnSquareSneeze.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+  }
+
+  return { btnPlus, btnMinus, btnModeStairs, btnModeColumn, btnModeSquare, btnModeCube, btnModePyramid, btnSquareSneeze, totalDisplay };
 }
 
 /**
@@ -145,8 +174,13 @@ function updateTotalDisplay(staircase, totalDisplay) {
   const total = staircase.getTotal();
   const mode = staircase.getMode();
   if (mode === 'square') {
-    const squareFill = staircase.getSquareFillTotal();
     const squareTotal = staircase.getSquareTotal();
+    if (staircase.getSquareSneeze()) {
+      const sneezeTotal = staircase.getSquareSneezeTotal();
+      totalDisplay.textContent = `Obramowanie: ${sneezeTotal} z ${squareTotal}`;
+      return;
+    }
+    const squareFill = staircase.getSquareFillTotal();
     totalDisplay.textContent = `${total} + ${squareFill} = ${squareTotal}`;
     return;
   }
