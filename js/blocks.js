@@ -115,21 +115,47 @@ export function createColumn(columnNumber, positionX = 0, extraBlocks = []) {
 
 export function createColumnFromBlocks(blocks, positionX = 0, blockCountOverride = null, blockIndices = null) {
   const column = new THREE.Group();
+  const solidBlocksByColor = new Map();
+  const tempMatrix = new THREE.Matrix4();
+  const tempPosition = new THREE.Vector3();
+  const tempQuaternion = new THREE.Quaternion();
+  const tempScale = new THREE.Vector3(1, 1, 1);
 
-  // Create blocks from config
+  // Batch solid blocks (no border) into InstancedMesh per color.
+  // Keep bordered blocks as regular meshes to preserve border behavior.
   blocks.forEach((blockConfig, i) => {
-    const block = createBlock(blockConfig.color);
-    if (blockConfig.borderColor !== null && blockConfig.borderColor !== undefined) {
-      block.scale.set(0.99, 0.99, 0.99);
-    }
-
-    // Stack blocks vertically - can touch now due to rounded edges
-    // Position so blocks sit on ground (y=0) and stack upward
     const blockIndex = blockIndices ? blockIndices[i] : i;
     const yPosition = blockIndex * (BLOCK_SIZE + GAP) + BLOCK_SIZE / 2;
 
-    block.position.y = yPosition;
-    column.add(block);
+    if (blockConfig.borderColor !== null && blockConfig.borderColor !== undefined) {
+      const block = createBlock(blockConfig.color);
+      block.scale.set(0.99, 0.99, 0.99);
+      block.position.y = yPosition;
+      column.add(block);
+      return;
+    }
+
+    const colorKey = String(blockConfig.color);
+    if (!solidBlocksByColor.has(colorKey)) {
+      solidBlocksByColor.set(colorKey, {
+        color: blockConfig.color,
+        yPositions: []
+      });
+    }
+    solidBlocksByColor.get(colorKey).yPositions.push(yPosition);
+  });
+
+  solidBlocksByColor.forEach(({ color, yPositions }) => {
+    const instancedBlocks = new THREE.InstancedMesh(BLOCK_GEOMETRY, getBlockMaterial(color), yPositions.length);
+    instancedBlocks.castShadow = true;
+    instancedBlocks.receiveShadow = true;
+    yPositions.forEach((yPosition, instanceIndex) => {
+      tempPosition.set(0, yPosition, 0);
+      tempMatrix.compose(tempPosition, tempQuaternion, tempScale);
+      instancedBlocks.setMatrixAt(instanceIndex, tempMatrix);
+    });
+    instancedBlocks.instanceMatrix.needsUpdate = true;
+    column.add(instancedBlocks);
   });
 
   // Now identify groups of consecutive blocks with same color and borderColor
