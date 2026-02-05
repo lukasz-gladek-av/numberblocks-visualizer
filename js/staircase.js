@@ -1,7 +1,12 @@
 import * as THREE from 'three';
 import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js';
 import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js';
-import { buildGlobalSolidInstancedMeshes, createColumnFromBlocks, getBlocksForNumber } from './blocks.js';
+import {
+  buildGlobalBorderInstancedMeshes,
+  buildGlobalSolidInstancedMeshes,
+  createColumnFromBlocks,
+  getBlocksForNumber
+} from './blocks.js';
 
 const MODE_STAIRS = 'stairs';
 const MODE_COLUMN = 'column';
@@ -26,6 +31,7 @@ export class Staircase {
     this.columns = [];
     this.extraGroups = [];
     this.globalSolidMeshes = [];
+    this.globalBorderMeshes = [];
     this.group = new THREE.Group(); // Container for all columns
     this.labelGroup = new THREE.Group(); // Container for column labels
     this.scene.add(this.group);
@@ -112,6 +118,8 @@ export class Staircase {
     this.extraGroups = [];
     this.globalSolidMeshes.forEach(mesh => this.group.remove(mesh));
     this.globalSolidMeshes = [];
+    this.globalBorderMeshes.forEach(mesh => this.group.remove(mesh));
+    this.globalBorderMeshes = [];
     this.sneezePieces = [];
     this.sneezeAnimation = null;
     this.pendingSneezeRebuild = false;
@@ -134,7 +142,9 @@ export class Staircase {
     const sneezeZOffset = this.sneezeTargetOffset;
     const animateSneeze = shouldSneezeSquare && options.animateSneeze;
     const columnBlocksCache = new Map();
-    const globalSolidCollector = new Map();
+    const useGlobalCubeBatching = isCubeMode;
+    const globalSolidCollector = useGlobalCubeBatching ? new Map() : null;
+    const globalBorderCollector = useGlobalCubeBatching ? new Map() : null;
 
     for (let i = 1; i <= columnCount; i++) {
       let baseBlocks = [];
@@ -189,8 +199,16 @@ export class Staircase {
           positionX,
           count,
           columnConfig.indices,
-          { positionZ, globalSolidCollector }
+          {
+            positionZ,
+            globalSolidCollector,
+            globalBorderCollector,
+            skipEmptyColumn: useGlobalCubeBatching
+          }
         );
+        if (!column) {
+          continue;
+        }
         column.castShadow = true;
         column.receiveShadow = true;
 
@@ -233,10 +251,16 @@ export class Staircase {
       }
     }
 
-    this.globalSolidMeshes = buildGlobalSolidInstancedMeshes(globalSolidCollector);
-    this.globalSolidMeshes.forEach((mesh) => {
-      this.group.add(mesh);
-    });
+    if (useGlobalCubeBatching) {
+      this.globalSolidMeshes = buildGlobalSolidInstancedMeshes(globalSolidCollector);
+      this.globalSolidMeshes.forEach((mesh) => {
+        this.group.add(mesh);
+      });
+      this.globalBorderMeshes = buildGlobalBorderInstancedMeshes(globalBorderCollector);
+      this.globalBorderMeshes.forEach((mesh) => {
+        this.group.add(mesh);
+      });
+    }
 
     this.currentN = n;
     if (animateSneeze && this.sneezePieces.length > 0) {
@@ -516,6 +540,15 @@ export class Staircase {
   }
 
   getColumnBlockCount(columnNumber) {
+    if (this.mode === MODE_COLUMN) {
+      return this.currentN;
+    }
+    if (this.mode === MODE_SQUARE || this.mode === MODE_CUBE) {
+      return this.currentN;
+    }
+    if (this.mode === MODE_PYRAMID) {
+      return columnNumber <= this.currentN ? columnNumber : (2 * this.currentN - columnNumber);
+    }
     const column = this.columns[columnNumber - 1];
     if (!column) {
       return columnNumber;

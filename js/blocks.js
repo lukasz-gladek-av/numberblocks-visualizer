@@ -121,6 +121,13 @@ function addToGlobalSolidCollector(globalSolidCollector, color, x, y, z) {
   globalSolidCollector.get(key).positions.push({ x, y, z });
 }
 
+function addToGlobalBorderCollector(globalBorderCollector, key, geometry, material, x, y, z) {
+  if (!globalBorderCollector.has(key)) {
+    globalBorderCollector.set(key, { geometry, material, positions: [] });
+  }
+  globalBorderCollector.get(key).positions.push({ x, y, z });
+}
+
 export function buildGlobalSolidInstancedMeshes(globalSolidCollector) {
   if (!globalSolidCollector || globalSolidCollector.size === 0) {
     return [];
@@ -146,8 +153,39 @@ export function buildGlobalSolidInstancedMeshes(globalSolidCollector) {
   return meshes;
 }
 
+export function buildGlobalBorderInstancedMeshes(globalBorderCollector) {
+  if (!globalBorderCollector || globalBorderCollector.size === 0) {
+    return [];
+  }
+  const meshes = [];
+  const tempMatrix = new THREE.Matrix4();
+  const tempPosition = new THREE.Vector3();
+  const tempQuaternion = new THREE.Quaternion();
+  const tempScale = new THREE.Vector3(1, 1, 1);
+
+  globalBorderCollector.forEach(({ geometry, material, positions }) => {
+    const instancedBorder = new THREE.InstancedMesh(geometry, material, positions.length);
+    instancedBorder.castShadow = false;
+    instancedBorder.receiveShadow = false;
+    instancedBorder.userData.noShadow = true;
+    positions.forEach((position, instanceIndex) => {
+      tempPosition.set(position.x, position.y, position.z);
+      tempMatrix.compose(tempPosition, tempQuaternion, tempScale);
+      instancedBorder.setMatrixAt(instanceIndex, tempMatrix);
+    });
+    instancedBorder.instanceMatrix.needsUpdate = true;
+    meshes.push(instancedBorder);
+  });
+  return meshes;
+}
+
 export function createColumnFromBlocks(blocks, positionX = 0, blockCountOverride = null, blockIndices = null, options = {}) {
-  const { positionZ = 0, globalSolidCollector = null } = options;
+  const {
+    positionZ = 0,
+    globalSolidCollector = null,
+    globalBorderCollector = null,
+    skipEmptyColumn = false
+  } = options;
   const column = new THREE.Group();
   const solidBlocksByColor = globalSolidCollector ? null : new Map();
   const tempMatrix = new THREE.Matrix4();
@@ -232,32 +270,72 @@ export function createColumnFromBlocks(blocks, positionX = 0, blockCountOverride
 
       const borderMaterial = getBorderMaterial(currentBlock.borderColor);
       const sideGeometry = getSideGeometry(groupSize);
+      if (globalBorderCollector) {
+        const sideKey = `side:${currentBlock.borderColor}:${groupSize}`;
+        const topBottomKey = `topBottom:${currentBlock.borderColor}`;
+        addToGlobalBorderCollector(
+          globalBorderCollector,
+          sideKey,
+          sideGeometry,
+          borderMaterial,
+          positionX - (halfWidth - frameThickness / 2),
+          groupCenterY,
+          positionZ
+        );
+        addToGlobalBorderCollector(
+          globalBorderCollector,
+          sideKey,
+          sideGeometry,
+          borderMaterial,
+          positionX + (halfWidth - frameThickness / 2),
+          groupCenterY,
+          positionZ
+        );
+        addToGlobalBorderCollector(
+          globalBorderCollector,
+          topBottomKey,
+          BORDER_TOP_BOTTOM_GEOMETRY,
+          borderMaterial,
+          positionX,
+          groupCenterY + halfHeight - frameThickness / 2,
+          positionZ
+        );
+        addToGlobalBorderCollector(
+          globalBorderCollector,
+          topBottomKey,
+          BORDER_TOP_BOTTOM_GEOMETRY,
+          borderMaterial,
+          positionX,
+          groupCenterY - halfHeight + frameThickness / 2,
+          positionZ
+        );
+      } else {
+        const leftSide = new THREE.Mesh(sideGeometry, borderMaterial);
+        leftSide.position.set(-(halfWidth - frameThickness / 2), groupCenterY, 0);
+        leftSide.castShadow = false;
+        leftSide.receiveShadow = false;
+        leftSide.userData.noShadow = true;
 
-      const leftSide = new THREE.Mesh(sideGeometry, borderMaterial);
-      leftSide.position.set(-(halfWidth - frameThickness / 2), groupCenterY, 0);
-      leftSide.castShadow = false;
-      leftSide.receiveShadow = false;
-      leftSide.userData.noShadow = true;
+        const rightSide = new THREE.Mesh(sideGeometry, borderMaterial);
+        rightSide.position.set(halfWidth - frameThickness / 2, groupCenterY, 0);
+        rightSide.castShadow = false;
+        rightSide.receiveShadow = false;
+        rightSide.userData.noShadow = true;
 
-      const rightSide = new THREE.Mesh(sideGeometry, borderMaterial);
-      rightSide.position.set(halfWidth - frameThickness / 2, groupCenterY, 0);
-      rightSide.castShadow = false;
-      rightSide.receiveShadow = false;
-      rightSide.userData.noShadow = true;
+        const topSide = new THREE.Mesh(BORDER_TOP_BOTTOM_GEOMETRY, borderMaterial);
+        topSide.position.set(0, groupCenterY + halfHeight - frameThickness / 2, 0);
+        topSide.castShadow = false;
+        topSide.receiveShadow = false;
+        topSide.userData.noShadow = true;
 
-      const topSide = new THREE.Mesh(BORDER_TOP_BOTTOM_GEOMETRY, borderMaterial);
-      topSide.position.set(0, groupCenterY + halfHeight - frameThickness / 2, 0);
-      topSide.castShadow = false;
-      topSide.receiveShadow = false;
-      topSide.userData.noShadow = true;
+        const bottomSide = new THREE.Mesh(BORDER_TOP_BOTTOM_GEOMETRY, borderMaterial);
+        bottomSide.position.set(0, groupCenterY - halfHeight + frameThickness / 2, 0);
+        bottomSide.castShadow = false;
+        bottomSide.receiveShadow = false;
+        bottomSide.userData.noShadow = true;
 
-      const bottomSide = new THREE.Mesh(BORDER_TOP_BOTTOM_GEOMETRY, borderMaterial);
-      bottomSide.position.set(0, groupCenterY - halfHeight + frameThickness / 2, 0);
-      bottomSide.castShadow = false;
-      bottomSide.receiveShadow = false;
-      bottomSide.userData.noShadow = true;
-
-      column.add(leftSide, rightSide, topSide, bottomSide);
+        column.add(leftSide, rightSide, topSide, bottomSide);
+      }
     }
 
     i = groupEnd + 1;
@@ -269,6 +347,10 @@ export function createColumnFromBlocks(blocks, positionX = 0, blockCountOverride
 
   column.userData.blockCount = blockCountOverride ?? blocks.length;
   column.position.y = 0; // Bottom aligned at ground level
+
+  if (skipEmptyColumn && column.children.length === 0) {
+    return null;
+  }
 
   return column;
 }
