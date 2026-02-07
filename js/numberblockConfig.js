@@ -25,6 +25,18 @@ const BORDER_COLORS = {
   ORANGE: 0xFF8C00,   // For 20
 };
 
+const RAINBOW_COLORS = [
+  COLORS.RED,
+  COLORS.ORANGE,
+  COLORS.YELLOW,
+  COLORS.GREEN,
+  COLORS.CYAN,
+  COLORS.INDIGO,
+  COLORS.MAGENTA,
+];
+
+const TENS_RAINBOW_COLORS = RAINBOW_COLORS.map((color) => lightenColor(color, 0.55));
+
 /**
  * Helper: Create single-color blocks
  */
@@ -34,6 +46,25 @@ function createSolidBlocks(count, color, borderColor = null) {
     borderColor,
     blockType: 'one'
   }));
+}
+
+function createPatternBlocks(count, palette, borderColor = null) {
+  return Array(count).fill(null).map((_, index) => ({
+    color: palette[index % palette.length],
+    borderColor,
+    blockType: 'one'
+  }));
+}
+
+function createColumnPatternBlocks(columnCount, columnHeight, palette, borderColor = null) {
+  return Array(columnCount * columnHeight).fill(null).map((_, index) => {
+    const columnIndex = Math.floor(index / columnHeight);
+    return {
+      color: palette[columnIndex % palette.length],
+      borderColor,
+      blockType: 'one'
+    };
+  });
 }
 
 /**
@@ -63,8 +94,10 @@ export function getNumberblockConfig(number) {
   if (number >= 20) {
     const tens = Math.floor(number / 10);
     const ones = number % 10;
-    const { baseColor, borderColor } = getTensColorsForDigit(tens);
-    const tensBlocks = createSolidBlocks(tens * 10, baseColor, borderColor);
+    const tensColorConfig = getTensColorsForDigit(tens);
+    const tensBlocks = tens === 7
+      ? createColumnPatternBlocks(tens, 10, TENS_RAINBOW_COLORS, tensColorConfig.borderColor)
+      : createSolidBlocks(tens * 10, tensColorConfig.baseColor, tensColorConfig.borderColor);
     const oneBlocks = ones > 0 ? getOneBlocksForNumber(ones) : [];
     return {
       number,

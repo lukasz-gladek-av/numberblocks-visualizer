@@ -598,11 +598,12 @@ export class Staircase {
     const allBlocks = getBlocksForNumber(safeN);
     const tensCount = Math.floor(safeN / 10);
     const onesCount = safeN % 10;
-    const tenColumnTemplate = allBlocks.slice(0, Math.min(10, allBlocks.length));
     const columns = [];
 
     for (let i = 0; i < tensCount; i++) {
-      columns.push(tenColumnTemplate);
+      const start = i * 10;
+      const end = start + 10;
+      columns.push(allBlocks.slice(start, end));
     }
 
     if (onesCount > 0) {
