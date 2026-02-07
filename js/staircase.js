@@ -98,10 +98,15 @@ export class Staircase {
     const startZ = -totalDepth / 2;
     const labelZ = startZ + totalDepth;
 
+    if (this.mode === MODE_COLUMN) {
+      this.addColumnLabel(this.currentN, startX, this.getMaxColumnHeight(), labelZ);
+      return;
+    }
+
     for (let i = 1; i <= columnCount; i++) {
       const positionX = startX + (i - 1) * columnSpacing;
       const blockCount = this.getColumnBlockCount(i);
-      const labelValue = (this.mode === MODE_PYRAMID || this.mode === MODE_COLUMN) ? blockCount : i;
+      const labelValue = this.mode === MODE_PYRAMID ? blockCount : i;
       this.addColumnLabel(labelValue, positionX, blockCount, labelZ);
     }
   }
@@ -137,6 +142,7 @@ export class Staircase {
     const isCubeMode = this.mode === MODE_CUBE;
     const isPyramidMode = this.mode === MODE_PYRAMID;
     const isColumnMode = this.mode === MODE_COLUMN;
+    const columnModeLayout = isColumnMode ? this.getColumnModeLayout(n) : null;
     const shouldFillToSquare = isSquareMode || isCubeMode;
     const shouldSneezeSquare = isSquareMode && this.squareSneeze;
     const sneezeZOffset = this.sneezeTargetOffset;
@@ -150,7 +156,7 @@ export class Staircase {
       let baseBlocks = [];
       let extraBlocks = [];
       if (isColumnMode) {
-        baseBlocks = getBlocksForNumber(n);
+        baseBlocks = columnModeLayout?.[i - 1] ?? getBlocksForNumber(n);
       } else if (isPyramidMode) {
         const columnHeight = i <= n ? i : (2 * n - i);
         baseBlocks = getBlocksForNumber(columnHeight);
@@ -431,9 +437,17 @@ export class Staircase {
 
   getColumnCount(n = this.currentN) {
     if (this.mode === MODE_COLUMN) {
-      return 1;
+      return this.getColumnModeLayout(n).length;
     }
     return this.mode === MODE_PYRAMID ? n * 2 - 1 : n;
+  }
+
+  getMaxColumnHeight(n = this.currentN) {
+    if (this.mode === MODE_COLUMN) {
+      const columnHeights = this.getColumnModeLayout(n).map((blocks) => blocks.length);
+      return columnHeights.length > 0 ? Math.max(...columnHeights) : Math.max(1, n);
+    }
+    return Math.max(1, n);
   }
 
   cycleMode() {
@@ -541,7 +555,8 @@ export class Staircase {
 
   getColumnBlockCount(columnNumber) {
     if (this.mode === MODE_COLUMN) {
-      return this.currentN;
+      const columnBlocks = this.getColumnModeLayout(this.currentN)[columnNumber - 1];
+      return columnBlocks ? columnBlocks.length : this.currentN;
     }
     if (this.mode === MODE_SQUARE || this.mode === MODE_CUBE) {
       return this.currentN;
@@ -562,5 +577,29 @@ export class Staircase {
       return [];
     }
     return getBlocksForNumber(extraCount);
+  }
+
+  getColumnModeLayout(n = this.currentN) {
+    const safeN = Math.max(1, n);
+    if (safeN < 10) {
+      return [getBlocksForNumber(safeN)];
+    }
+
+    const allBlocks = getBlocksForNumber(safeN);
+    const tensCount = Math.floor(safeN / 10);
+    const onesCount = safeN % 10;
+    const tenColumnTemplate = allBlocks.slice(0, Math.min(10, allBlocks.length));
+    const columns = [];
+
+    for (let i = 0; i < tensCount; i++) {
+      columns.push(tenColumnTemplate);
+    }
+
+    if (onesCount > 0) {
+      const onesStart = tensCount * 10;
+      columns.push(allBlocks.slice(onesStart));
+    }
+
+    return columns.length > 0 ? columns : [getBlocksForNumber(safeN)];
   }
 }

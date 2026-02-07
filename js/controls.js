@@ -17,6 +17,16 @@ export function setupControls(staircase, updateCallback, adjustCameraCallback) {
   const totalDisplay = document.getElementById('total-display');
   let pendingDelta = 0;
   let applyRaf = null;
+  const adjustCamera = () => {
+    if (!adjustCameraCallback) {
+      return;
+    }
+    adjustCameraCallback(
+      staircase.getColumnCount(),
+      staircase.getDepthCount(),
+      staircase.getMaxColumnHeight()
+    );
+  };
 
   const applyPendingDelta = () => {
     applyRaf = null;
@@ -31,9 +41,7 @@ export function setupControls(staircase, updateCallback, adjustCameraCallback) {
     }
     staircase.build(targetN);
     updateTotalDisplay(staircase, totalDisplay);
-    if (adjustCameraCallback) {
-      adjustCameraCallback(staircase.getColumnCount(), staircase.getDepthCount(), staircase.getCurrentN());
-    }
+    adjustCamera();
     updateCallback?.();
   };
 
@@ -67,9 +75,7 @@ export function setupControls(staircase, updateCallback, adjustCameraCallback) {
     }
     staircase.reset();
     updateTotalDisplay(staircase, totalDisplay);
-    if (adjustCameraCallback) {
-      adjustCameraCallback(staircase.getColumnCount(), staircase.getDepthCount(), staircase.getCurrentN());
-    }
+    adjustCamera();
     updateCallback?.();
   });
 
@@ -78,9 +84,7 @@ export function setupControls(staircase, updateCallback, adjustCameraCallback) {
     updateModeButtons(staircase, { btnModeStairs, btnModeColumn, btnModeSquare, btnModeCube, btnModePyramid });
     updateSquareSneezeButton();
     updateTotalDisplay(staircase, totalDisplay);
-    if (adjustCameraCallback) {
-      adjustCameraCallback(staircase.getColumnCount(), staircase.getDepthCount(), staircase.getCurrentN());
-    }
+    adjustCamera();
     updateCallback?.();
   });
 
@@ -89,9 +93,7 @@ export function setupControls(staircase, updateCallback, adjustCameraCallback) {
     updateModeButtons(staircase, { btnModeStairs, btnModeColumn, btnModeSquare, btnModeCube, btnModePyramid });
     updateSquareSneezeButton();
     updateTotalDisplay(staircase, totalDisplay);
-    if (adjustCameraCallback) {
-      adjustCameraCallback(staircase.getColumnCount(), staircase.getDepthCount(), staircase.getCurrentN());
-    }
+    adjustCamera();
     updateCallback?.();
   });
 
@@ -100,9 +102,7 @@ export function setupControls(staircase, updateCallback, adjustCameraCallback) {
     updateModeButtons(staircase, { btnModeStairs, btnModeColumn, btnModeSquare, btnModeCube, btnModePyramid });
     updateSquareSneezeButton();
     updateTotalDisplay(staircase, totalDisplay);
-    if (adjustCameraCallback) {
-      adjustCameraCallback(staircase.getColumnCount(), staircase.getDepthCount(), staircase.getCurrentN());
-    }
+    adjustCamera();
     updateCallback?.();
   });
 
@@ -111,9 +111,7 @@ export function setupControls(staircase, updateCallback, adjustCameraCallback) {
     updateModeButtons(staircase, { btnModeStairs, btnModeColumn, btnModeSquare, btnModeCube, btnModePyramid });
     updateSquareSneezeButton();
     updateTotalDisplay(staircase, totalDisplay);
-    if (adjustCameraCallback) {
-      adjustCameraCallback(staircase.getColumnCount(), staircase.getDepthCount(), staircase.getCurrentN());
-    }
+    adjustCamera();
     updateCallback?.();
   });
 
@@ -122,9 +120,7 @@ export function setupControls(staircase, updateCallback, adjustCameraCallback) {
     updateModeButtons(staircase, { btnModeStairs, btnModeColumn, btnModeSquare, btnModeCube, btnModePyramid });
     updateSquareSneezeButton();
     updateTotalDisplay(staircase, totalDisplay);
-    if (adjustCameraCallback) {
-      adjustCameraCallback(staircase.getColumnCount(), staircase.getDepthCount(), staircase.getCurrentN());
-    }
+    adjustCamera();
     updateCallback?.();
   });
 
@@ -135,9 +131,7 @@ export function setupControls(staircase, updateCallback, adjustCameraCallback) {
     staircase.toggleSquareSneeze();
     updateSquareSneezeButton();
     updateTotalDisplay(staircase, totalDisplay);
-    if (adjustCameraCallback) {
-      adjustCameraCallback(staircase.getColumnCount(), staircase.getDepthCount(), staircase.getCurrentN());
-    }
+    adjustCamera();
     updateCallback?.();
   });
 
