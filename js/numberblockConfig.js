@@ -56,9 +56,12 @@ function createPatternBlocks(count, palette, borderColor = null) {
   }));
 }
 
-function createColumnPatternBlocks(columnCount, columnHeight, palette, borderColor = null) {
+function createColumnPatternBlocks(columnCount, columnHeight, palette, borderColors = null) {
   return Array(columnCount * columnHeight).fill(null).map((_, index) => {
     const columnIndex = Math.floor(index / columnHeight);
+    const borderColor = Array.isArray(borderColors)
+      ? borderColors[columnIndex % borderColors.length]
+      : borderColors;
     return {
       color: palette[columnIndex % palette.length],
       borderColor,
@@ -96,7 +99,7 @@ export function getNumberblockConfig(number) {
     const ones = number % 10;
     const tensColorConfig = getTensColorsForDigit(tens);
     const tensBlocks = tens === 7
-      ? createColumnPatternBlocks(tens, 10, TENS_RAINBOW_COLORS, tensColorConfig.borderColor)
+      ? createColumnPatternBlocks(tens, 10, TENS_RAINBOW_COLORS, RAINBOW_COLORS)
       : createSolidBlocks(tens * 10, tensColorConfig.baseColor, tensColorConfig.borderColor);
     const oneBlocks = ones > 0 ? getOneBlocksForNumber(ones) : [];
     return {
