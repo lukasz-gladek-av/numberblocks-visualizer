@@ -36,6 +36,21 @@ const RAINBOW_COLORS = [
 ];
 
 const TENS_RAINBOW_COLORS = RAINBOW_COLORS.map((color) => lightenColor(color, 0.55));
+const TENS_NINE_COLORS = [
+  0xD9D9D9,
+  0xB8B8B8,
+  0x989898,
+];
+const TENS_NINE_BORDER_COLORS = [
+  0xA9A9A9,
+  0x888888,
+  0x686868,
+];
+const TENS_NINE_COLUMN_COLORS = [
+  TENS_NINE_COLORS[0], TENS_NINE_COLORS[0], TENS_NINE_COLORS[0],
+  TENS_NINE_COLORS[1], TENS_NINE_COLORS[1], TENS_NINE_COLORS[1],
+  TENS_NINE_COLORS[2], TENS_NINE_COLORS[2], TENS_NINE_COLORS[2], TENS_NINE_COLORS[2],
+];
 
 /**
  * Helper: Create single-color blocks
@@ -100,7 +115,9 @@ export function getNumberblockConfig(number) {
     const tensColorConfig = getTensColorsForDigit(tens);
     const tensBlocks = tens === 7
       ? createColumnPatternBlocks(tens, 10, TENS_RAINBOW_COLORS, RAINBOW_COLORS)
-      : createSolidBlocks(tens * 10, tensColorConfig.baseColor, tensColorConfig.borderColor);
+      : tens === 9
+        ? createColumnPatternBlocks(tens, 10, TENS_NINE_COLUMN_COLORS, TENS_NINE_BORDER_COLORS)
+        : createSolidBlocks(tens * 10, tensColorConfig.baseColor, tensColorConfig.borderColor);
     const oneBlocks = ones > 0 ? getOneBlocksForNumber(ones) : [];
     return {
       number,

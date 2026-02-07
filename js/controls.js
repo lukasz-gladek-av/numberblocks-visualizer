@@ -5,6 +5,8 @@
  */
 export function setupControls(staircase, updateCallback, adjustCameraCallback) {
   // Button elements
+  const btnPlusTen = document.getElementById('btn-plus-ten');
+  const btnMinusTen = document.getElementById('btn-minus-ten');
   const btnPlus = document.getElementById('btn-plus');
   const btnMinus = document.getElementById('btn-minus');
   const btnReset = document.getElementById('btn-reset');
@@ -56,6 +58,14 @@ export function setupControls(staircase, updateCallback, adjustCameraCallback) {
   updateTotalDisplay(staircase, totalDisplay);
   updateModeButtons(staircase, { btnModeStairs, btnModeColumn, btnModeSquare, btnModeCube, btnModePyramid });
   updateSquareSneezeButton();
+
+  btnPlusTen.addEventListener('click', () => {
+    scheduleDelta(10);
+  });
+
+  btnMinusTen.addEventListener('click', () => {
+    scheduleDelta(-10);
+  });
 
   // Plus button - increment N
   btnPlus.addEventListener('click', () => {
@@ -136,6 +146,8 @@ export function setupControls(staircase, updateCallback, adjustCameraCallback) {
   });
 
   // Touch-friendly additions
+  addTouchFeedback(btnPlusTen);
+  addTouchFeedback(btnMinusTen);
   addTouchFeedback(btnPlus);
   addTouchFeedback(btnMinus);
   addTouchFeedback(btnReset);
@@ -154,7 +166,19 @@ export function setupControls(staircase, updateCallback, adjustCameraCallback) {
     btnSquareSneeze.setAttribute('aria-pressed', isActive ? 'true' : 'false');
   }
 
-  return { btnPlus, btnMinus, btnModeStairs, btnModeColumn, btnModeSquare, btnModeCube, btnModePyramid, btnSquareSneeze, totalDisplay };
+  return {
+    btnPlusTen,
+    btnMinusTen,
+    btnPlus,
+    btnMinus,
+    btnModeStairs,
+    btnModeColumn,
+    btnModeSquare,
+    btnModeCube,
+    btnModePyramid,
+    btnSquareSneeze,
+    totalDisplay
+  };
 }
 
 /**
