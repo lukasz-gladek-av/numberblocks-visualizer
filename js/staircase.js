@@ -193,6 +193,7 @@ export class Staircase {
     for (let zIndex = 0; zIndex < depthCount; zIndex++) {
       const positionZ = startZ + zIndex * depthSpacing;
       const isEdgeZ = zIndex === 0 || zIndex === depthCount - 1;
+      const tensCount = isColumnMode ? Math.floor(Math.max(1, n) / 10) : 0;
       for (let i = 1; i <= columnCount; i++) {
         const positionX = startX + (i - 1) * columnSpacing;
         const isEdgeX = i === 1 || i === columnCount;
@@ -200,6 +201,14 @@ export class Staircase {
         const { full, shell, sneeze, sneezeInterior, count } = columnBlocksCache.get(i);
         // In cube mode, skip interior blocks and render only the outer shell.
         const columnConfig = isCubeMode && !isSurfaceColumn ? shell : (shouldSneezeSquare ? sneeze : full);
+        const borderSides = (isColumnMode && tensCount > 1 && i <= tensCount)
+          ? {
+              left: i === 1,
+              right: i === tensCount,
+              top: true,
+              bottom: true,
+            }
+          : null;
         const column = createColumnFromBlocks(
           columnConfig.blocks,
           positionX,
@@ -209,7 +218,8 @@ export class Staircase {
             positionZ,
             globalSolidCollector,
             globalBorderCollector,
-            skipEmptyColumn: useGlobalCubeBatching
+            skipEmptyColumn: useGlobalCubeBatching,
+            borderSides
           }
         );
         if (!column) {
