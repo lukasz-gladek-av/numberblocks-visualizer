@@ -4,6 +4,9 @@
  * @param {Function} updateCallback - Callback to update UI (e.g., total display)
  */
 export function setupControls(staircase, updateCallback, adjustCameraCallback) {
+  const MIN_N = 1;
+  const MAX_N = 999;
+
   // Button elements
   const btnPlusTen = document.getElementById('btn-plus-ten');
   const btnMinusTen = document.getElementById('btn-minus-ten');
@@ -36,14 +39,16 @@ export function setupControls(staircase, updateCallback, adjustCameraCallback) {
       return;
     }
     const currentN = staircase.getCurrentN();
-    const targetN = Math.max(1, currentN + pendingDelta);
+    const targetN = Math.min(MAX_N, Math.max(MIN_N, currentN + pendingDelta));
     pendingDelta = 0;
     if (targetN === currentN) {
+      updateStepButtons();
       return;
     }
     staircase.build(targetN);
     updateTotalDisplay(staircase, totalDisplay);
     adjustCamera();
+    updateStepButtons();
     updateCallback?.();
   };
 
@@ -58,6 +63,7 @@ export function setupControls(staircase, updateCallback, adjustCameraCallback) {
   updateTotalDisplay(staircase, totalDisplay);
   updateModeButtons(staircase, { btnModeStairs, btnModeColumn, btnModeSquare, btnModeCube, btnModePyramid });
   updateSquareSneezeButton();
+  updateStepButtons();
 
   btnPlusTen.addEventListener('click', () => {
     scheduleDelta(10);
@@ -86,6 +92,7 @@ export function setupControls(staircase, updateCallback, adjustCameraCallback) {
     staircase.reset();
     updateTotalDisplay(staircase, totalDisplay);
     adjustCamera();
+    updateStepButtons();
     updateCallback?.();
   });
 
@@ -95,6 +102,7 @@ export function setupControls(staircase, updateCallback, adjustCameraCallback) {
     updateSquareSneezeButton();
     updateTotalDisplay(staircase, totalDisplay);
     adjustCamera();
+    updateStepButtons();
     updateCallback?.();
   });
 
@@ -104,6 +112,7 @@ export function setupControls(staircase, updateCallback, adjustCameraCallback) {
     updateSquareSneezeButton();
     updateTotalDisplay(staircase, totalDisplay);
     adjustCamera();
+    updateStepButtons();
     updateCallback?.();
   });
 
@@ -113,6 +122,7 @@ export function setupControls(staircase, updateCallback, adjustCameraCallback) {
     updateSquareSneezeButton();
     updateTotalDisplay(staircase, totalDisplay);
     adjustCamera();
+    updateStepButtons();
     updateCallback?.();
   });
 
@@ -122,6 +132,7 @@ export function setupControls(staircase, updateCallback, adjustCameraCallback) {
     updateSquareSneezeButton();
     updateTotalDisplay(staircase, totalDisplay);
     adjustCamera();
+    updateStepButtons();
     updateCallback?.();
   });
 
@@ -131,6 +142,7 @@ export function setupControls(staircase, updateCallback, adjustCameraCallback) {
     updateSquareSneezeButton();
     updateTotalDisplay(staircase, totalDisplay);
     adjustCamera();
+    updateStepButtons();
     updateCallback?.();
   });
 
@@ -164,6 +176,16 @@ export function setupControls(staircase, updateCallback, adjustCameraCallback) {
     btnSquareSneeze.disabled = !isSquareMode;
     btnSquareSneeze.classList.toggle('active', isActive);
     btnSquareSneeze.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+  }
+
+  function updateStepButtons() {
+    const n = staircase.getCurrentN();
+    const isMin = n <= MIN_N;
+    const isMax = n >= MAX_N;
+    btnMinus.disabled = isMin;
+    btnMinusTen.disabled = isMin;
+    btnPlus.disabled = isMax;
+    btnPlusTen.disabled = isMax;
   }
 
   return {

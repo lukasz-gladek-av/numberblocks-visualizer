@@ -179,6 +179,31 @@ export function buildGlobalBorderInstancedMeshes(globalBorderCollector) {
   return meshes;
 }
 
+function canMergeBorderBlocks(currentBlock, nextBlock) {
+  if (currentBlock.borderGroup != null || nextBlock.borderGroup != null) {
+    return currentBlock.borderGroup != null && currentBlock.borderGroup === nextBlock.borderGroup;
+  }
+  return nextBlock.color === currentBlock.color;
+}
+
+export function getConsecutiveBlockGroups(blocks, blockIndices = null) {
+  const groups = [];
+  let i = 0;
+  while (i < blocks.length) {
+    const currentBlock = blocks[i];
+    let groupEnd = i;
+    while (groupEnd + 1 < blocks.length &&
+           blocks[groupEnd + 1].borderColor === currentBlock.borderColor &&
+           canMergeBorderBlocks(currentBlock, blocks[groupEnd + 1]) &&
+           (!blockIndices || blockIndices[groupEnd + 1] === blockIndices[groupEnd] + 1)) {
+      groupEnd++;
+    }
+    groups.push({ start: i, end: groupEnd });
+    i = groupEnd + 1;
+  }
+  return groups;
+}
+
 export function createColumnFromBlocks(blocks, positionX = 0, blockCountOverride = null, blockIndices = null, options = {}) {
   const {
     positionZ = 0,
@@ -242,31 +267,19 @@ export function createColumnFromBlocks(blocks, positionX = 0, blockCountOverride
     });
   }
 
-  // Now identify groups of consecutive blocks with same color and borderColor
-  // and add borders around entire groups
-  let i = 0;
-  while (i < blocks.length) {
-    const currentBlock = blocks[i];
-    let groupEnd = i;
-
-    // Find consecutive blocks with same borderColor and either same color or same borderGroup
-    while (groupEnd + 1 < blocks.length &&
-           blocks[groupEnd + 1].borderColor === currentBlock.borderColor &&
-           (blocks[groupEnd + 1].color === currentBlock.color ||
-            (currentBlock.borderGroup != null && blocks[groupEnd + 1].borderGroup === currentBlock.borderGroup)) &&
-           (!blockIndices || blockIndices[groupEnd + 1] === blockIndices[groupEnd] + 1)) {
-      groupEnd++;
-    }
-
-    // If this group has a borderColor, add a border around the entire group
+  // Identify groups of consecutive blocks and add borders around bordered groups.
+  const blockGroups = getConsecutiveBlockGroups(blocks, blockIndices);
+  blockGroups.forEach(({ start, end }) => {
+    const currentBlock = blocks[start];
+    const groupEnd = end;
     if (currentBlock.borderColor !== null && currentBlock.borderColor !== undefined) {
       const groupSize = blockIndices
-        ? blockIndices[groupEnd] - blockIndices[i] + 1
-        : groupEnd - i + 1;
+        ? blockIndices[groupEnd] - blockIndices[start] + 1
+        : groupEnd - start + 1;
       const groupHeight = groupSize * (BLOCK_SIZE + GAP) - GAP;
 
       // Position at the center of the group
-      const groupStartY = (blockIndices ? blockIndices[i] : i) * (BLOCK_SIZE + GAP);
+      const groupStartY = (blockIndices ? blockIndices[start] : start) * (BLOCK_SIZE + GAP);
       const groupCenterY = groupStartY + groupHeight / 2;
 
       const boxSize = BLOCK_SIZE;
@@ -361,9 +374,7 @@ export function createColumnFromBlocks(blocks, positionX = 0, blockCountOverride
         }
       }
     }
-
-    i = groupEnd + 1;
-  }
+  });
 
   // Position the column horizontally
   column.position.x = positionX;

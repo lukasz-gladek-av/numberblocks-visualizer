@@ -14,6 +14,8 @@ const MODE_SQUARE = 'square';
 const MODE_CUBE = 'cube';
 const MODE_PYRAMID = 'pyramid';
 const MODE_ORDER = [MODE_STAIRS, MODE_COLUMN, MODE_SQUARE, MODE_CUBE, MODE_PYRAMID];
+const MIN_SUPPORTED_N = 1;
+const MAX_SUPPORTED_N = 999;
 
 function easeOutBack(t, overshoot = 1.70158) {
   const p = t - 1;
@@ -116,6 +118,9 @@ export class Staircase {
    * @param {number} n - The number of columns or blocks (mode dependent)
    */
   build(n, options = {}) {
+    const rawN = Number.isFinite(n) ? Math.floor(n) : this.currentN;
+    const boundedN = Math.min(MAX_SUPPORTED_N, Math.max(MIN_SUPPORTED_N, rawN));
+
     // Clear existing columns
     this.columns.forEach(column => this.group.remove(column));
     this.columns = [];
@@ -132,17 +137,17 @@ export class Staircase {
     // Create new columns
     const columnSpacing = 0.9; // No spacing - blocks touch
     const depthSpacing = 0.9;
-    const columnCount = this.getColumnCount(n);
+    const columnCount = this.getColumnCount(boundedN);
     const totalWidth = (columnCount - 1) * columnSpacing;
     const startX = -totalWidth / 2;
-    const depthCount = this.getDepthCount(n);
+    const depthCount = this.getDepthCount(boundedN);
     const totalDepth = (depthCount - 1) * depthSpacing;
     const startZ = -totalDepth / 2;
     const isSquareMode = this.mode === MODE_SQUARE;
     const isCubeMode = this.mode === MODE_CUBE;
     const isPyramidMode = this.mode === MODE_PYRAMID;
     const isColumnMode = this.mode === MODE_COLUMN;
-    const columnModeLayout = isColumnMode ? this.getColumnModeLayout(n) : null;
+    const columnModeLayout = isColumnMode ? this.getColumnModeLayout(boundedN) : null;
     const shouldFillToSquare = isSquareMode || isCubeMode;
     const shouldSneezeSquare = isSquareMode && this.squareSneeze;
     const sneezeZOffset = this.sneezeTargetOffset;
@@ -156,13 +161,13 @@ export class Staircase {
       let baseBlocks = [];
       let extraBlocks = [];
       if (isColumnMode) {
-        baseBlocks = columnModeLayout?.[i - 1] ?? getBlocksForNumber(n);
+        baseBlocks = columnModeLayout?.[i - 1] ?? getBlocksForNumber(boundedN);
       } else if (isPyramidMode) {
-        const columnHeight = i <= n ? i : (2 * n - i);
+        const columnHeight = i <= boundedN ? i : (2 * boundedN - i);
         baseBlocks = getBlocksForNumber(columnHeight);
       } else {
         baseBlocks = getBlocksForNumber(i);
-        extraBlocks = shouldFillToSquare ? this.getSquareFillBlocks(n, i) : [];
+        extraBlocks = shouldFillToSquare ? this.getSquareFillBlocks(boundedN, i) : [];
       }
       const blocks = extraBlocks.length > 0
         ? [...baseBlocks, ...extraBlocks.slice().reverse()]
@@ -193,9 +198,9 @@ export class Staircase {
     for (let zIndex = 0; zIndex < depthCount; zIndex++) {
       const positionZ = startZ + zIndex * depthSpacing;
       const isEdgeZ = zIndex === 0 || zIndex === depthCount - 1;
-      const hundredsDigit = isColumnMode ? Math.floor(Math.max(1, n) / 100) : 0;
+      const hundredsDigit = isColumnMode ? Math.floor(boundedN / 100) : 0;
       const hundredCols = hundredsDigit * 10;
-      const remainingTens = isColumnMode ? Math.floor((Math.max(1, n) % 100) / 10) : 0;
+      const remainingTens = isColumnMode ? Math.floor((boundedN % 100) / 10) : 0;
       const tensStart = hundredCols + 1;
       const tensEnd = hundredCols + remainingTens;
       for (let i = 1; i <= columnCount; i++) {
@@ -295,7 +300,7 @@ export class Staircase {
       });
     }
 
-    this.currentN = n;
+    this.currentN = boundedN;
     if (animateSneeze && this.sneezePieces.length > 0) {
       this.startSneezeAnimation({
         to: sneezeZOffset,
@@ -459,22 +464,25 @@ export class Staircase {
   }
 
   getDepthCount(n = this.currentN) {
-    return this.mode === MODE_CUBE ? n : 1;
+    const safeN = Math.min(MAX_SUPPORTED_N, Math.max(MIN_SUPPORTED_N, n));
+    return this.mode === MODE_CUBE ? safeN : 1;
   }
 
   getColumnCount(n = this.currentN) {
+    const safeN = Math.min(MAX_SUPPORTED_N, Math.max(MIN_SUPPORTED_N, n));
     if (this.mode === MODE_COLUMN) {
-      return this.getColumnModeLayout(n).length;
+      return this.getColumnModeLayout(safeN).length;
     }
-    return this.mode === MODE_PYRAMID ? n * 2 - 1 : n;
+    return this.mode === MODE_PYRAMID ? safeN * 2 - 1 : safeN;
   }
 
   getMaxColumnHeight(n = this.currentN) {
+    const safeN = Math.min(MAX_SUPPORTED_N, Math.max(MIN_SUPPORTED_N, n));
     if (this.mode === MODE_COLUMN) {
-      const columnHeights = this.getColumnModeLayout(n).map((blocks) => blocks.length);
-      return columnHeights.length > 0 ? Math.max(...columnHeights) : Math.max(1, n);
+      const columnHeights = this.getColumnModeLayout(safeN).map((blocks) => blocks.length);
+      return columnHeights.length > 0 ? Math.max(...columnHeights) : Math.max(MIN_SUPPORTED_N, safeN);
     }
-    return Math.max(1, n);
+    return Math.max(MIN_SUPPORTED_N, safeN);
   }
 
   cycleMode() {
@@ -607,25 +615,45 @@ export class Staircase {
   }
 
   getColumnModeLayout(n = this.currentN) {
-    const safeN = Math.max(1, n);
+    const safeN = Math.min(MAX_SUPPORTED_N, Math.max(MIN_SUPPORTED_N, n));
     if (safeN < 10) {
       return [getBlocksForNumber(safeN)];
     }
 
     const allBlocks = getBlocksForNumber(safeN);
-    const tensCount = Math.floor(safeN / 10);
-    const onesCount = safeN % 10;
     const columns = [];
+    const hundredsDigit = Math.floor(safeN / 100);
+    const remainder = safeN % 100;
+    const remainingTens = Math.floor(remainder / 10);
+    const onesCount = remainder % 10;
+    let offset = 0;
 
-    for (let i = 0; i < tensCount; i++) {
-      const start = i * 10;
-      const end = start + 10;
-      columns.push(allBlocks.slice(start, end));
+    for (let h = 0; h < hundredsDigit; h++) {
+      const hundredBlocks = allBlocks.slice(offset, offset + 100);
+      for (let c = 0; c < 10; c++) {
+        const start = c * 10;
+        const columnBlocks = hundredBlocks.slice(start, start + 10);
+        if (columnBlocks.length === 10) {
+          columns.push(columnBlocks);
+        }
+      }
+      offset += 100;
     }
 
+    for (let t = 0; t < remainingTens; t++) {
+      const start = offset + t * 10;
+      const columnBlocks = allBlocks.slice(start, start + 10);
+      if (columnBlocks.length === 10) {
+        columns.push(columnBlocks);
+      }
+    }
+    offset += remainingTens * 10;
+
     if (onesCount > 0) {
-      const onesStart = tensCount * 10;
-      columns.push(allBlocks.slice(onesStart));
+      const onesBlocks = allBlocks.slice(offset, offset + onesCount);
+      if (onesBlocks.length > 0) {
+        columns.push(onesBlocks);
+      }
     }
 
     return columns.length > 0 ? columns : [getBlocksForNumber(safeN)];
