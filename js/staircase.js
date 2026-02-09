@@ -153,9 +153,10 @@ export class Staircase {
     const sneezeZOffset = this.sneezeTargetOffset;
     const animateSneeze = shouldSneezeSquare && options.animateSneeze;
     const columnBlocksCache = new Map();
-    const useGlobalCubeBatching = isCubeMode;
-    const globalSolidCollector = useGlobalCubeBatching ? new Map() : null;
-    const globalBorderCollector = useGlobalCubeBatching ? new Map() : null;
+    const useGlobalSolidBatching = isCubeMode;
+    const useGlobalBorderBatching = true;
+    const globalSolidCollector = useGlobalSolidBatching ? new Map() : null;
+    const globalBorderCollector = useGlobalBorderBatching ? new Map() : null;
 
     for (let i = 1; i <= columnCount; i++) {
       let baseBlocks = [];
@@ -240,7 +241,7 @@ export class Staircase {
             positionZ,
             globalSolidCollector,
             globalBorderCollector,
-            skipEmptyColumn: useGlobalCubeBatching,
+            skipEmptyColumn: useGlobalSolidBatching,
             borderSides
           }
         );
@@ -289,11 +290,13 @@ export class Staircase {
       }
     }
 
-    if (useGlobalCubeBatching) {
+    if (useGlobalSolidBatching) {
       this.globalSolidMeshes = buildGlobalSolidInstancedMeshes(globalSolidCollector);
       this.globalSolidMeshes.forEach((mesh) => {
         this.group.add(mesh);
       });
+    }
+    if (useGlobalBorderBatching) {
       this.globalBorderMeshes = buildGlobalBorderInstancedMeshes(globalBorderCollector);
       this.globalBorderMeshes.forEach((mesh) => {
         this.group.add(mesh);

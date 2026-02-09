@@ -113,12 +113,12 @@ export function createColumn(columnNumber, positionX = 0, extraBlocks = []) {
   return createColumnFromBlocks(blocks, positionX, blocks.length);
 }
 
-function addToGlobalSolidCollector(globalSolidCollector, color, x, y, z) {
+function addToGlobalSolidCollector(globalSolidCollector, color, x, y, z, scale = 1) {
   const key = String(color);
   if (!globalSolidCollector.has(key)) {
-    globalSolidCollector.set(key, { color, positions: [] });
+    globalSolidCollector.set(key, { color, instances: [] });
   }
-  globalSolidCollector.get(key).positions.push({ x, y, z });
+  globalSolidCollector.get(key).instances.push({ x, y, z, scale });
 }
 
 function addToGlobalBorderCollector(globalBorderCollector, key, geometry, material, x, y, z) {
@@ -138,12 +138,14 @@ export function buildGlobalSolidInstancedMeshes(globalSolidCollector) {
   const tempQuaternion = new THREE.Quaternion();
   const tempScale = new THREE.Vector3(1, 1, 1);
 
-  globalSolidCollector.forEach(({ color, positions }) => {
-    const instancedBlocks = new THREE.InstancedMesh(BLOCK_GEOMETRY, getBlockMaterial(color), positions.length);
+  globalSolidCollector.forEach(({ color, instances }) => {
+    const instancedBlocks = new THREE.InstancedMesh(BLOCK_GEOMETRY, getBlockMaterial(color), instances.length);
     instancedBlocks.castShadow = true;
     instancedBlocks.receiveShadow = true;
-    positions.forEach((position, instanceIndex) => {
-      tempPosition.set(position.x, position.y, position.z);
+    instances.forEach((instance, instanceIndex) => {
+      tempPosition.set(instance.x, instance.y, instance.z);
+      const scale = instance.scale ?? 1;
+      tempScale.set(scale, scale, scale);
       tempMatrix.compose(tempPosition, tempQuaternion, tempScale);
       instancedBlocks.setMatrixAt(instanceIndex, tempMatrix);
     });
@@ -223,22 +225,15 @@ export function createColumnFromBlocks(blocks, positionX = 0, blockCountOverride
   const tempQuaternion = new THREE.Quaternion();
   const tempScale = new THREE.Vector3(1, 1, 1);
 
-  // Batch solid blocks (no border) into InstancedMesh per color.
-  // Keep bordered blocks as regular meshes to preserve border behavior.
+  // Batch blocks into InstancedMesh per color.
+  // Bordered blocks get a tiny scale inset to avoid overlap with border frames.
   blocks.forEach((blockConfig, i) => {
     const blockIndex = blockIndices ? blockIndices[i] : i;
     const yPosition = blockIndex * (BLOCK_SIZE + GAP) + BLOCK_SIZE / 2;
-
-    if (blockConfig.borderColor !== null && blockConfig.borderColor !== undefined) {
-      const block = createBlock(blockConfig.color);
-      block.scale.set(0.99, 0.99, 0.99);
-      block.position.y = yPosition;
-      column.add(block);
-      return;
-    }
+    const scale = blockConfig.borderColor !== null && blockConfig.borderColor !== undefined ? 0.99 : 1;
 
     if (globalSolidCollector) {
-      addToGlobalSolidCollector(globalSolidCollector, blockConfig.color, positionX, yPosition, positionZ);
+      addToGlobalSolidCollector(globalSolidCollector, blockConfig.color, positionX, yPosition, positionZ, scale);
       return;
     }
 
@@ -246,19 +241,20 @@ export function createColumnFromBlocks(blocks, positionX = 0, blockCountOverride
     if (!solidBlocksByColor.has(colorKey)) {
       solidBlocksByColor.set(colorKey, {
         color: blockConfig.color,
-        yPositions: []
+        instances: []
       });
     }
-    solidBlocksByColor.get(colorKey).yPositions.push(yPosition);
+    solidBlocksByColor.get(colorKey).instances.push({ y: yPosition, scale });
   });
 
   if (!globalSolidCollector) {
-    solidBlocksByColor.forEach(({ color, yPositions }) => {
-      const instancedBlocks = new THREE.InstancedMesh(BLOCK_GEOMETRY, getBlockMaterial(color), yPositions.length);
+    solidBlocksByColor.forEach(({ color, instances }) => {
+      const instancedBlocks = new THREE.InstancedMesh(BLOCK_GEOMETRY, getBlockMaterial(color), instances.length);
       instancedBlocks.castShadow = true;
       instancedBlocks.receiveShadow = true;
-      yPositions.forEach((yPosition, instanceIndex) => {
-        tempPosition.set(0, yPosition, 0);
+      instances.forEach(({ y, scale }, instanceIndex) => {
+        tempPosition.set(0, y, 0);
+        tempScale.set(scale, scale, scale);
         tempMatrix.compose(tempPosition, tempQuaternion, tempScale);
         instancedBlocks.setMatrixAt(instanceIndex, tempMatrix);
       });
