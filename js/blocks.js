@@ -249,10 +249,11 @@ export function createColumnFromBlocks(blocks, positionX = 0, blockCountOverride
     const currentBlock = blocks[i];
     let groupEnd = i;
 
-    // Find consecutive blocks with same color and borderColor
+    // Find consecutive blocks with same borderColor and either same color or same borderGroup
     while (groupEnd + 1 < blocks.length &&
-           blocks[groupEnd + 1].color === currentBlock.color &&
            blocks[groupEnd + 1].borderColor === currentBlock.borderColor &&
+           (blocks[groupEnd + 1].color === currentBlock.color ||
+            (currentBlock.borderGroup != null && blocks[groupEnd + 1].borderGroup === currentBlock.borderGroup)) &&
            (!blockIndices || blockIndices[groupEnd + 1] === blockIndices[groupEnd] + 1)) {
       groupEnd++;
     }

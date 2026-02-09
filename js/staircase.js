@@ -193,7 +193,11 @@ export class Staircase {
     for (let zIndex = 0; zIndex < depthCount; zIndex++) {
       const positionZ = startZ + zIndex * depthSpacing;
       const isEdgeZ = zIndex === 0 || zIndex === depthCount - 1;
-      const tensCount = isColumnMode ? Math.floor(Math.max(1, n) / 10) : 0;
+      const hundredsDigit = isColumnMode ? Math.floor(Math.max(1, n) / 100) : 0;
+      const hundredCols = hundredsDigit * 10;
+      const remainingTens = isColumnMode ? Math.floor((Math.max(1, n) % 100) / 10) : 0;
+      const tensStart = hundredCols + 1;
+      const tensEnd = hundredCols + remainingTens;
       for (let i = 1; i <= columnCount; i++) {
         const positionX = startX + (i - 1) * columnSpacing;
         const isEdgeX = i === 1 || i === columnCount;
@@ -201,14 +205,27 @@ export class Staircase {
         const { full, shell, sneeze, sneezeInterior, count } = columnBlocksCache.get(i);
         // In cube mode, skip interior blocks and render only the outer shell.
         const columnConfig = isCubeMode && !isSurfaceColumn ? shell : (shouldSneezeSquare ? sneeze : full);
-        const borderSides = (isColumnMode && tensCount > 1 && i <= tensCount)
-          ? {
-              left: i === 1,
-              right: i === tensCount,
+        let borderSides = null;
+        if (isColumnMode) {
+          if (hundredCols > 0 && i >= 1 && i <= hundredCols) {
+            // Each group of 10 columns (one hundred) gets its own border
+            const groupStart = Math.floor((i - 1) / 10) * 10 + 1;
+            const groupEnd = groupStart + 9;
+            borderSides = {
+              left: i === groupStart,
+              right: i === groupEnd,
               top: true,
               bottom: true,
-            }
-          : null;
+            };
+          } else if (remainingTens > 1 && i >= tensStart && i <= tensEnd) {
+            borderSides = {
+              left: i === tensStart,
+              right: i === tensEnd,
+              top: true,
+              bottom: true,
+            };
+          }
+        }
         const column = createColumnFromBlocks(
           columnConfig.blocks,
           positionX,

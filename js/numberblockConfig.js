@@ -1,73 +1,85 @@
 /**
  * Numberblocks Configuration System
- * Defines color, borders, and block composition for each number 1-99
+ * Defines color, borders, and block composition for each number 1-999
  * Based on official Numberblocks character design
+ *
+ * Color system scales by place value:
+ *   Ones (1-9):     solid blocks in digit's primary color
+ *   Tens (10-90):   lightened blocks + primary-color border
+ *   Hundreds (100-900): checkerboard of two lightened shades + primary-color border
+ *
+ * Digits 7 and 9 are multi-color at every scale:
+ *   7: rainbow (each unit uses a different RAINBOW_COLORS entry)
+ *   9: grey gradient (3+3+3 grouping of light/medium/dark)
  */
 
-// Color definitions
+// ─── Color Definitions ─────────────────────────
+
 const COLORS = {
-  RED: 0xFF2E3B,      // 1
-  ORANGE: 0xFF8C00,   // 2
-  YELLOW: 0xFFD700,   // 3
-  GREEN: 0x32CD32,    // 4
-  CYAN: 0x00BFFF,     // 5
-  INDIGO: 0x7B68EE,   // 6
-  MAGENTA: 0xFF69B4,  // 8
-  GREY_LIGHT: 0xD3D3D3,    // For 9 gradient
-  GREY_MEDIUM: 0xA9A9A9,   // For 9 gradient
-  GREY_DARK: 0x808080,     // For 9 gradient
-  WHITE: 0xFFFFFF,    // 10, and tens in 11-19
-  APRICOT: 0xFFCC99,  // 20 (light brownish-sandy)
+  RED: 0xFF2E3B,
+  ORANGE: 0xFF8C00,
+  YELLOW: 0xFFD700,
+  GREEN: 0x32CD32,
+  CYAN: 0x00BFFF,
+  INDIGO: 0x7B68EE,
+  MAGENTA: 0xFF69B4,
+  GREY_LIGHT: 0xD3D3D3,
+  GREY_MEDIUM: 0xA9A9A9,
+  GREY_DARK: 0x808080,
+  WHITE: 0xFFFFFF,
+  APRICOT: 0xFFCC99,
 };
 
-const BORDER_COLORS = {
-  RED: 0xFF2E3B,      // For 10 and teen tens
-  ORANGE: 0xFF8C00,   // For 20
-};
+/** Canonical digit → primary color. Digits 7 and 9 are null (multi-color). */
+const DIGIT_COLORS = [
+  null,           // 0 (unused)
+  COLORS.RED,     // 1
+  COLORS.ORANGE,  // 2
+  COLORS.YELLOW,  // 3
+  COLORS.GREEN,   // 4
+  COLORS.CYAN,    // 5
+  COLORS.INDIGO,  // 6
+  null,           // 7 (rainbow)
+  COLORS.MAGENTA, // 8
+  null,           // 9 (grey gradient)
+];
 
 const RAINBOW_COLORS = [
-  COLORS.RED,
-  COLORS.ORANGE,
-  COLORS.YELLOW,
-  COLORS.GREEN,
-  COLORS.CYAN,
-  COLORS.INDIGO,
-  COLORS.MAGENTA,
+  COLORS.RED, COLORS.ORANGE, COLORS.YELLOW,
+  COLORS.GREEN, COLORS.CYAN, COLORS.INDIGO, COLORS.MAGENTA,
 ];
 
-const TENS_RAINBOW_COLORS = RAINBOW_COLORS.map((color) => lightenColor(color, 0.55));
-const TENS_NINE_COLORS = [
-  0xD9D9D9,
-  0xB8B8B8,
-  0x989898,
+/** Grey shades for digit 9 — fill + border per shade tier. */
+const NINE_GREY_SHADES = [
+  { fill: 0xD9D9D9, border: 0xA9A9A9 },
+  { fill: 0xB8B8B8, border: 0x888888 },
+  { fill: 0x989898, border: 0x686868 },
 ];
-const TENS_NINE_BORDER_COLORS = [
-  0xA9A9A9,
-  0x888888,
-  0x686868,
-];
+
+// Derived arrays for 90's column-pattern layout (3+3+4 distribution)
 const TENS_NINE_COLUMN_COLORS = [
-  TENS_NINE_COLORS[0], TENS_NINE_COLORS[0], TENS_NINE_COLORS[0],
-  TENS_NINE_COLORS[1], TENS_NINE_COLORS[1], TENS_NINE_COLORS[1],
-  TENS_NINE_COLORS[2], TENS_NINE_COLORS[2], TENS_NINE_COLORS[2], TENS_NINE_COLORS[2],
+  ...Array(3).fill(NINE_GREY_SHADES[0].fill),
+  ...Array(3).fill(NINE_GREY_SHADES[1].fill),
+  ...Array(4).fill(NINE_GREY_SHADES[2].fill),
 ];
+const TENS_NINE_BORDER_COLORS = NINE_GREY_SHADES.map(s => s.border);
 
-/**
- * Helper: Create single-color blocks
- */
-function createSolidBlocks(count, color, borderColor = null) {
-  return Array(count).fill(null).map(() => ({
-    color,
-    borderColor,
-    blockType: 'one'
-  }));
+// ─── Utility ───────────────────────────────────
+
+function lightenColor(color, amount) {
+  const r = (color >> 16) & 0xff;
+  const g = (color >> 8) & 0xff;
+  const b = color & 0xff;
+  return (
+    (Math.min(255, Math.round(r + (255 - r) * amount)) << 16) |
+    (Math.min(255, Math.round(g + (255 - g) * amount)) << 8) |
+    Math.min(255, Math.round(b + (255 - b) * amount))
+  );
 }
 
-function createPatternBlocks(count, palette, borderColor = null) {
-  return Array(count).fill(null).map((_, index) => ({
-    color: palette[index % palette.length],
-    borderColor,
-    blockType: 'one'
+function createSolidBlocks(count, color, borderColor = null) {
+  return Array(count).fill(null).map(() => ({
+    color, borderColor, blockType: 'one'
   }));
 }
 
@@ -85,40 +97,145 @@ function createColumnPatternBlocks(columnCount, columnHeight, palette, borderCol
   });
 }
 
+// ─── Ones (digits 1-9) ────────────────────────
+
+/** Get blocks for a single digit 1-9. */
+function getDigitBlocks(digit) {
+  if (digit === 7) {
+    return RAINBOW_COLORS.map(color => ({ color, borderColor: null, blockType: 'one' }));
+  }
+  if (digit === 9) {
+    return [
+      ...createSolidBlocks(3, COLORS.GREY_LIGHT),
+      ...createSolidBlocks(3, COLORS.GREY_MEDIUM),
+      ...createSolidBlocks(3, COLORS.GREY_DARK),
+    ];
+  }
+  return createSolidBlocks(digit, DIGIT_COLORS[digit]);
+}
+
+// ─── Tens (10-90) ──────────────────────────────
+
+/** Get fill + border colors for a tens digit. */
+function getTensColors(digit) {
+  if (digit === 1) return { baseColor: COLORS.WHITE, borderColor: COLORS.RED };
+  if (digit === 2) return { baseColor: COLORS.APRICOT, borderColor: COLORS.ORANGE };
+  if (digit === 9) return { baseColor: COLORS.GREY_LIGHT, borderColor: COLORS.GREY_DARK };
+  const primary = DIGIT_COLORS[digit];
+  return {
+    baseColor: lightenColor(primary, digit === 8 ? 0.45 : 0.55),
+    borderColor: primary,
+  };
+}
+
+const TENS_RAINBOW_COLORS = RAINBOW_COLORS.map(c => lightenColor(c, 0.55));
+
+/** Create D×10 blocks for a tens digit. */
+function createTensBlocks(tensDigit) {
+  if (tensDigit === 7) {
+    return createColumnPatternBlocks(7, 10, TENS_RAINBOW_COLORS, RAINBOW_COLORS);
+  }
+  if (tensDigit === 9) {
+    return createColumnPatternBlocks(9, 10, TENS_NINE_COLUMN_COLORS, TENS_NINE_BORDER_COLORS);
+  }
+  const { baseColor, borderColor } = getTensColors(tensDigit);
+  return createSolidBlocks(tensDigit * 10, baseColor, borderColor);
+}
+
+// ─── Hundreds (100-900) ────────────────────────
+
+/**
+ * Get per-group color specs for a hundreds digit.
+ * Returns an array of { lightColor, darkColor, borderColor } — one per hundred-group.
+ * Regular digits: all groups identical. Digit 7: rainbow. Digit 9: grey gradient.
+ */
+function getHundredGroupColors(hundredsDigit) {
+  if (hundredsDigit === 7) {
+    return RAINBOW_COLORS.map(c => ({
+      lightColor: lightenColor(c, 0.65),
+      darkColor: lightenColor(c, 0.45),
+      borderColor: c,
+    }));
+  }
+  if (hundredsDigit === 9) {
+    return Array.from({ length: 9 }, (_, h) => {
+      const { border } = NINE_GREY_SHADES[Math.floor(h / 3)];
+      return {
+        lightColor: lightenColor(border, 0.55),
+        darkColor: lightenColor(border, 0.35),
+        borderColor: border,
+      };
+    });
+  }
+  // Regular: derive from digit's primary color
+  const primary = DIGIT_COLORS[hundredsDigit] ?? COLORS.RED;
+  let lightColor, darkColor;
+  if (hundredsDigit === 1) {
+    // Hand-tuned salmon for 100
+    lightColor = 0xF4A0A0;
+    darkColor = 0xD87878;
+  } else {
+    const lightAmt = hundredsDigit === 8 ? 0.60 : 0.65;
+    const darkAmt = hundredsDigit === 8 ? 0.40 : 0.45;
+    lightColor = lightenColor(primary, lightAmt);
+    darkColor = lightenColor(primary, darkAmt);
+  }
+  const spec = { lightColor, darkColor, borderColor: primary };
+  return Array(hundredsDigit).fill(spec);
+}
+
+/** Create D×100 checkerboard blocks for a hundreds digit. */
+function createHundredBlocks(hundredsDigit) {
+  const groups = getHundredGroupColors(hundredsDigit);
+  const blocks = [];
+  groups.forEach(({ lightColor, darkColor, borderColor }, h) => {
+    for (let i = 0; i < 100; i++) {
+      const col = Math.floor(i / 10);
+      const row = i % 10;
+      const isLight = (col + row) % 2 === 0;
+      blocks.push({
+        color: isLight ? lightColor : darkColor,
+        borderColor,
+        borderGroup: `hundred_${h}`,
+        blockType: 'hundred'
+      });
+    }
+  });
+  return blocks;
+}
+
+// ─── Main Config Function ──────────────────────
+
 /**
  * Get configuration for a specific number
- * @param {number} number - The number (1-99)
+ * @param {number} number - The number (1-999)
  * @returns {Object} Configuration object with blocks array
  */
 export function getNumberblockConfig(number) {
-  if (number < 1 || number > 99) {
-    throw new Error(`Number must be between 1 and 99, got ${number}`);
+  if (number < 1 || number > 999) {
+    throw new Error(`Number must be between 1 and 999, got ${number}`);
   }
 
-  // Handle teens (11-19) by decomposing into tens + ones
-  if (number >= 11 && number <= 19) {
-    const ones = number - 10;
-    const tenBlocks = createSolidBlocks(10, COLORS.WHITE, BORDER_COLORS.RED);
-    const oneBlocks = getOneBlocksForNumber(ones);
+  // Hundreds: D×100 checkerboard + remainder (0-99)
+  if (number >= 100) {
+    const hundredsDigit = Math.floor(number / 100);
+    const remainder = number % 100;
+    const hundredBlocks = createHundredBlocks(hundredsDigit);
+    const remainderBlocks = remainder > 0 ? getNumberblockConfig(remainder).blocks : [];
     return {
       number,
       displayName: getNumberName(number),
-      blocks: [...tenBlocks, ...oneBlocks],
+      blocks: [...hundredBlocks, ...remainderBlocks],
       face: getDefaultFaceConfig(number)
     };
   }
 
-  // Handle numbers 20-99 by decomposing into tens + ones
-  if (number >= 20) {
-    const tens = Math.floor(number / 10);
+  // Tens + ones (10-99)
+  if (number >= 10) {
+    const tensDigit = Math.floor(number / 10);
     const ones = number % 10;
-    const tensColorConfig = getTensColorsForDigit(tens);
-    const tensBlocks = tens === 7
-      ? createColumnPatternBlocks(tens, 10, TENS_RAINBOW_COLORS, RAINBOW_COLORS)
-      : tens === 9
-        ? createColumnPatternBlocks(tens, 10, TENS_NINE_COLUMN_COLORS, TENS_NINE_BORDER_COLORS)
-        : createSolidBlocks(tens * 10, tensColorConfig.baseColor, tensColorConfig.borderColor);
-    const oneBlocks = ones > 0 ? getOneBlocksForNumber(ones) : [];
+    const tensBlocks = createTensBlocks(tensDigit);
+    const oneBlocks = ones > 0 ? getDigitBlocks(ones) : [];
     return {
       number,
       displayName: getNumberName(number),
@@ -127,182 +244,17 @@ export function getNumberblockConfig(number) {
     };
   }
 
-  // Handle special and single-digit numbers
-  switch (number) {
-    case 1:
-      return {
-        number,
-        displayName: 'One',
-        blocks: createSolidBlocks(1, COLORS.RED),
-        face: getDefaultFaceConfig(1)
-      };
-    case 2:
-      return {
-        number,
-        displayName: 'Two',
-        blocks: createSolidBlocks(2, COLORS.ORANGE),
-        face: getDefaultFaceConfig(2)
-      };
-    case 3:
-      return {
-        number,
-        displayName: 'Three',
-        blocks: createSolidBlocks(3, COLORS.YELLOW),
-        face: getDefaultFaceConfig(3)
-      };
-    case 4:
-      return {
-        number,
-        displayName: 'Four',
-        blocks: createSolidBlocks(4, COLORS.GREEN),
-        face: getDefaultFaceConfig(4)
-      };
-    case 5:
-      return {
-        number,
-        displayName: 'Five',
-        blocks: createSolidBlocks(5, COLORS.CYAN),
-        face: getDefaultFaceConfig(5)
-      };
-    case 6:
-      return {
-        number,
-        displayName: 'Six',
-        blocks: createSolidBlocks(6, COLORS.INDIGO),
-        face: getDefaultFaceConfig(6)
-      };
-    case 7:
-      // Rainbow: 7 blocks with different colors
-      return {
-        number,
-        displayName: 'Seven',
-        blocks: [
-          { color: COLORS.RED, borderColor: null, blockType: 'one' },
-          { color: COLORS.ORANGE, borderColor: null, blockType: 'one' },
-          { color: COLORS.YELLOW, borderColor: null, blockType: 'one' },
-          { color: COLORS.GREEN, borderColor: null, blockType: 'one' },
-          { color: COLORS.CYAN, borderColor: null, blockType: 'one' },
-          { color: COLORS.INDIGO, borderColor: null, blockType: 'one' },
-          { color: COLORS.MAGENTA, borderColor: null, blockType: 'one' },
-        ],
-        face: getDefaultFaceConfig(7)
-      };
-    case 8:
-      return {
-        number,
-        displayName: 'Eight',
-        blocks: createSolidBlocks(8, COLORS.MAGENTA),
-        face: getDefaultFaceConfig(8)
-      };
-    case 9:
-      // Grey gradient: 9 blocks grouped by shade (3 light, 3 medium, 3 dark)
-      return {
-        number,
-        displayName: 'Nine',
-        blocks: [
-          { color: COLORS.GREY_LIGHT, borderColor: null, blockType: 'one' },
-          { color: COLORS.GREY_LIGHT, borderColor: null, blockType: 'one' },
-          { color: COLORS.GREY_LIGHT, borderColor: null, blockType: 'one' },
-          { color: COLORS.GREY_MEDIUM, borderColor: null, blockType: 'one' },
-          { color: COLORS.GREY_MEDIUM, borderColor: null, blockType: 'one' },
-          { color: COLORS.GREY_MEDIUM, borderColor: null, blockType: 'one' },
-          { color: COLORS.GREY_DARK, borderColor: null, blockType: 'one' },
-          { color: COLORS.GREY_DARK, borderColor: null, blockType: 'one' },
-          { color: COLORS.GREY_DARK, borderColor: null, blockType: 'one' },
-        ],
-        face: getDefaultFaceConfig(9)
-      };
-    case 10:
-      // White with red borders
-      return {
-        number,
-        displayName: 'Ten',
-        blocks: createSolidBlocks(10, COLORS.WHITE, BORDER_COLORS.RED),
-        face: getDefaultFaceConfig(10)
-      };
-    default:
-      throw new Error(`Unknown number: ${number}`);
-  }
+  // Single digits (1-9)
+  return {
+    number,
+    displayName: getNumberName(number),
+    blocks: getDigitBlocks(number),
+    face: getDefaultFaceConfig(number)
+  };
 }
 
-/**
- * Helper: Get blocks for a single digit (used in teens)
- * Returns the appropriate colored blocks for the ones place
- */
-function getOneBlocksForNumber(digit) {
-  switch (digit) {
-    case 1: return createSolidBlocks(1, COLORS.RED);
-    case 2: return createSolidBlocks(2, COLORS.ORANGE);
-    case 3: return createSolidBlocks(3, COLORS.YELLOW);
-    case 4: return createSolidBlocks(4, COLORS.GREEN);
-    case 5: return createSolidBlocks(5, COLORS.CYAN);
-    case 6: return createSolidBlocks(6, COLORS.INDIGO);
-    case 7:
-      // Rainbow for teens with 7 (e.g., 17)
-      return [
-        { color: COLORS.RED, borderColor: null, blockType: 'one' },
-        { color: COLORS.ORANGE, borderColor: null, blockType: 'one' },
-        { color: COLORS.YELLOW, borderColor: null, blockType: 'one' },
-        { color: COLORS.GREEN, borderColor: null, blockType: 'one' },
-        { color: COLORS.CYAN, borderColor: null, blockType: 'one' },
-        { color: COLORS.INDIGO, borderColor: null, blockType: 'one' },
-        { color: COLORS.MAGENTA, borderColor: null, blockType: 'one' },
-      ];
-    case 8: return createSolidBlocks(8, COLORS.MAGENTA);
-    case 9:
-      // Grey gradient for teens with 9 (e.g., 19) - grouped by shade (3 light, 3 medium, 3 dark)
-      return [
-        { color: COLORS.GREY_LIGHT, borderColor: null, blockType: 'one' },
-        { color: COLORS.GREY_LIGHT, borderColor: null, blockType: 'one' },
-        { color: COLORS.GREY_LIGHT, borderColor: null, blockType: 'one' },
-        { color: COLORS.GREY_MEDIUM, borderColor: null, blockType: 'one' },
-        { color: COLORS.GREY_MEDIUM, borderColor: null, blockType: 'one' },
-        { color: COLORS.GREY_MEDIUM, borderColor: null, blockType: 'one' },
-        { color: COLORS.GREY_DARK, borderColor: null, blockType: 'one' },
-        { color: COLORS.GREY_DARK, borderColor: null, blockType: 'one' },
-        { color: COLORS.GREY_DARK, borderColor: null, blockType: 'one' },
-      ];
-    default:
-      throw new Error(`Invalid digit: ${digit}`);
-  }
-}
+// ─── Supporting Functions ──────────────────────
 
-function getTensColorsForDigit(digit) {
-  switch (digit) {
-    case 2:
-      return { baseColor: COLORS.APRICOT, borderColor: COLORS.ORANGE };
-    case 3:
-      return { baseColor: lightenColor(COLORS.YELLOW, 0.55), borderColor: COLORS.YELLOW };
-    case 4:
-      return { baseColor: lightenColor(COLORS.GREEN, 0.55), borderColor: COLORS.GREEN };
-    case 5:
-      return { baseColor: lightenColor(COLORS.CYAN, 0.55), borderColor: COLORS.CYAN };
-    case 6:
-      return { baseColor: lightenColor(COLORS.INDIGO, 0.55), borderColor: COLORS.INDIGO };
-    case 7:
-      return { baseColor: lightenColor(COLORS.MAGENTA, 0.55), borderColor: COLORS.MAGENTA };
-    case 8:
-      return { baseColor: lightenColor(COLORS.MAGENTA, 0.45), borderColor: COLORS.MAGENTA };
-    case 9:
-      return { baseColor: COLORS.GREY_LIGHT, borderColor: COLORS.GREY_DARK };
-    default:
-      throw new Error(`Invalid tens digit: ${digit}`);
-  }
-}
-
-function lightenColor(color, amount) {
-  const r = (color >> 16) & 0xff;
-  const g = (color >> 8) & 0xff;
-  const b = color & 0xff;
-  const nr = Math.min(255, Math.round(r + (255 - r) * amount));
-  const ng = Math.min(255, Math.round(g + (255 - g) * amount));
-  const nb = Math.min(255, Math.round(b + (255 - b) * amount));
-  return (nr << 16) | (ng << 8) | nb;
-}
-
-/**
- * Helper: Get English name for a number
- */
 function getNumberName(number) {
   const names = [
     'Zero', 'One', 'Two', 'Three', 'Four', 'Five',
@@ -313,10 +265,6 @@ function getNumberName(number) {
   return names[number] || `Number ${number}`;
 }
 
-/**
- * Helper: Get default face configuration
- * Used as placeholder for future Phase 2 implementation
- */
 function getDefaultFaceConfig(number) {
   return {
     eyeCount: number === 1 ? 1 : 2,
@@ -344,4 +292,4 @@ export function decomposeNumber(number) {
  * Export color constants for reference
  */
 export const NUMBERBLOCK_COLORS = COLORS;
-export const NUMBERBLOCK_BORDER_COLORS = BORDER_COLORS;
+export const NUMBERBLOCK_BORDER_COLORS = { RED: COLORS.RED, ORANGE: COLORS.ORANGE };
