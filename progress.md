@@ -13,3 +13,22 @@ Original prompt: Zrób żeby tryb pojedynczy nie rosl bez konca w gore ale kazda
   - Top info bar now reports real rendered column count in column mode (e.g., `5 kolumn: 47 klocków`).
 - TODO for next agent:
   - If preferred by product UX, change top info text in column mode to keep historical wording (e.g., `1 kolumna: 47 klocków`) while retaining split visual layout.
+
+## 2026-02-11
+- User follow-up: "Przyciski nie działają na telefonie".
+- Fixed mobile button interactions in `js/controls.js`:
+  - Removed `touchstart` handler that called `preventDefault()`.
+  - Switched touch feedback to Pointer Events (`pointerdown/up/cancel/leave`) with fallback for older browsers.
+  - Kept visual press/release feedback without blocking native click activation.
+- Added `touch-action: manipulation;` to `.btn` in `styles/main.css` to improve tap handling on phones.
+- TODO: verify on mobile-emulated browser that +/-/reset/mode buttons respond to tap and still animate press state.
+- Additional mobile issue found and fixed: on narrow screens controls overflowed outside viewport, making +/- appear non-functional.
+- Responsive control bar updated (`styles/main.css`) to wrap on mobile and reduce control sizes so all buttons stay inside viewport.
+- New UX behavior for sneeze button:
+  - `KICHANIE` now appears above the main controls row (`position: absolute` anchored to `.controls`).
+  - It is visible only in square mode (`hidden` toggled in `updateSquareSneezeButton`).
+  - Added `aria-hidden` synchronization for accessibility.
+- Mobile verification (Playwright iPhone 13 emulation):
+  - All control buttons are inside viewport.
+  - Taps work for `+`, `-`, `-10`.
+  - Sneeze button hidden in non-square mode and visible above controls in square mode.

@@ -174,6 +174,8 @@ export function setupControls(staircase, updateCallback, adjustCameraCallback) {
     const isSquareMode = staircase.getSquareMode();
     const isActive = staircase.getSquareSneeze();
     btnSquareSneeze.disabled = !isSquareMode;
+    btnSquareSneeze.hidden = !isSquareMode;
+    btnSquareSneeze.setAttribute('aria-hidden', isSquareMode ? 'false' : 'true');
     btnSquareSneeze.classList.toggle('active', isActive);
     btnSquareSneeze.setAttribute('aria-pressed', isActive ? 'true' : 'false');
   }
@@ -260,23 +262,30 @@ function updateModeButtons(staircase, buttons) {
  * @param {HTMLElement} button - The button element
  */
 function addTouchFeedback(button) {
-  // Mouse/touch down
-  button.addEventListener('mousedown', () => {
+  const applyScale = () => {
+    if (button.classList.contains('btn-sneeze')) {
+      button.style.transform = 'translateX(-50%) scale(0.95)';
+      return;
+    }
     button.style.transform = 'scale(0.95)';
-  });
+  };
 
-  button.addEventListener('touchstart', (e) => {
-    e.preventDefault();
-    button.style.transform = 'scale(0.95)';
-  });
-
-  // Mouse/touch up
   const resetScale = () => {
     button.style.transform = '';
   };
 
+  if (window.PointerEvent) {
+    button.addEventListener('pointerdown', applyScale);
+    button.addEventListener('pointerup', resetScale);
+    button.addEventListener('pointercancel', resetScale);
+    button.addEventListener('pointerleave', resetScale);
+    return;
+  }
+
+  button.addEventListener('mousedown', applyScale);
   button.addEventListener('mouseup', resetScale);
   button.addEventListener('mouseleave', resetScale);
+  button.addEventListener('touchstart', applyScale, { passive: true });
   button.addEventListener('touchend', resetScale);
   button.addEventListener('touchcancel', resetScale);
 }
