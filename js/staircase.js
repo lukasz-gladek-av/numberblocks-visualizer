@@ -119,7 +119,8 @@ export class Staircase {
    */
   build(n, options = {}) {
     const rawN = Number.isFinite(n) ? Math.floor(n) : this.currentN;
-    const boundedN = Math.min(MAX_SUPPORTED_N, Math.max(MIN_SUPPORTED_N, rawN));
+    const effectiveMax = this.mode === MODE_COLUMN ? Infinity : MAX_SUPPORTED_N;
+    const boundedN = Math.min(effectiveMax, Math.max(MIN_SUPPORTED_N, rawN));
 
     // Clear existing columns
     this.columns.forEach(column => this.group.remove(column));
@@ -199,11 +200,13 @@ export class Staircase {
     for (let zIndex = 0; zIndex < depthCount; zIndex++) {
       const positionZ = startZ + zIndex * depthSpacing;
       const isEdgeZ = zIndex === 0 || zIndex === depthCount - 1;
-      const hundredsDigit = isColumnMode ? Math.floor(boundedN / 100) : 0;
-      const hundredCols = hundredsDigit * 10;
+      const thousandsDigit = isColumnMode ? Math.floor(boundedN / 1000) : 0;
+      const thousandCols = thousandsDigit * 100;
+      const hundredsDigit = isColumnMode ? Math.floor((boundedN % 1000) / 100) : 0;
+      const totalHundredCols = thousandCols + hundredsDigit * 10;
       const remainingTens = isColumnMode ? Math.floor((boundedN % 100) / 10) : 0;
-      const tensStart = hundredCols + 1;
-      const tensEnd = hundredCols + remainingTens;
+      const tensStart = totalHundredCols + 1;
+      const tensEnd = totalHundredCols + remainingTens;
       for (let i = 1; i <= columnCount; i++) {
         const positionX = startX + (i - 1) * columnSpacing;
         const isEdgeX = i === 1 || i === columnCount;
@@ -213,9 +216,20 @@ export class Staircase {
         const columnConfig = isCubeMode && !isSurfaceColumn ? shell : (shouldSneezeSquare ? sneeze : full);
         let borderSides = null;
         if (isColumnMode) {
-          if (hundredCols > 0 && i >= 1 && i <= hundredCols) {
-            // Each group of 10 columns (one hundred) gets its own border
+          if (thousandCols > 0 && i >= 1 && i <= thousandCols) {
+            // Each group of 100 columns (one thousand) gets its own border;
+            // within each thousand, groups of 10 (one hundred) also get borders
             const groupStart = Math.floor((i - 1) / 10) * 10 + 1;
+            const groupEnd = groupStart + 9;
+            borderSides = {
+              left: i === groupStart,
+              right: i === groupEnd,
+              top: true,
+              bottom: true,
+            };
+          } else if (totalHundredCols > thousandCols && i > thousandCols && i <= totalHundredCols) {
+            // Each group of 10 columns (one hundred) gets its own border
+            const groupStart = thousandCols + Math.floor((i - thousandCols - 1) / 10) * 10 + 1;
             const groupEnd = groupStart + 9;
             borderSides = {
               left: i === groupStart,
@@ -472,19 +486,21 @@ export class Staircase {
   }
 
   getColumnCount(n = this.currentN) {
-    const safeN = Math.min(MAX_SUPPORTED_N, Math.max(MIN_SUPPORTED_N, n));
     if (this.mode === MODE_COLUMN) {
+      const safeN = Math.max(MIN_SUPPORTED_N, Math.floor(n));
       return this.getColumnModeLayout(safeN).length;
     }
+    const safeN = Math.min(MAX_SUPPORTED_N, Math.max(MIN_SUPPORTED_N, n));
     return this.mode === MODE_PYRAMID ? safeN * 2 - 1 : safeN;
   }
 
   getMaxColumnHeight(n = this.currentN) {
-    const safeN = Math.min(MAX_SUPPORTED_N, Math.max(MIN_SUPPORTED_N, n));
     if (this.mode === MODE_COLUMN) {
+      const safeN = Math.max(MIN_SUPPORTED_N, Math.floor(n));
       const columnHeights = this.getColumnModeLayout(safeN).map((blocks) => blocks.length);
       return columnHeights.length > 0 ? Math.max(...columnHeights) : Math.max(MIN_SUPPORTED_N, safeN);
     }
+    const safeN = Math.min(MAX_SUPPORTED_N, Math.max(MIN_SUPPORTED_N, n));
     return Math.max(MIN_SUPPORTED_N, safeN);
   }
 
@@ -618,47 +634,104 @@ export class Staircase {
   }
 
   getColumnModeLayout(n = this.currentN) {
-    const safeN = Math.min(MAX_SUPPORTED_N, Math.max(MIN_SUPPORTED_N, n));
+    const safeN = Math.max(MIN_SUPPORTED_N, Math.floor(n));
     if (safeN < 10) {
       return [getBlocksForNumber(safeN)];
     }
 
-    const allBlocks = getBlocksForNumber(safeN);
     const columns = [];
-    const hundredsDigit = Math.floor(safeN / 100);
-    const remainder = safeN % 100;
-    const remainingTens = Math.floor(remainder / 10);
-    const onesCount = remainder % 10;
-    let offset = 0;
 
-    for (let h = 0; h < hundredsDigit; h++) {
-      const hundredBlocks = allBlocks.slice(offset, offset + 100);
-      for (let c = 0; c < 10; c++) {
-        const start = c * 10;
-        const columnBlocks = hundredBlocks.slice(start, start + 10);
+    // For n <= 999 we can call getBlocksForNumber(safeN) directly and slice.
+    // For n >= 1000 we compose by repeating hundred-blocks per thousand digit.
+    if (safeN <= MAX_SUPPORTED_N) {
+      const allBlocks = getBlocksForNumber(safeN);
+      const hundredsDigit = Math.floor(safeN / 100);
+      const remainder = safeN % 100;
+      const remainingTens = Math.floor(remainder / 10);
+      const onesCount = remainder % 10;
+      let offset = 0;
+
+      for (let h = 0; h < hundredsDigit; h++) {
+        const hundredBlocks = allBlocks.slice(offset, offset + 100);
+        for (let c = 0; c < 10; c++) {
+          const columnBlocks = hundredBlocks.slice(c * 10, c * 10 + 10);
+          if (columnBlocks.length === 10) {
+            columns.push(columnBlocks);
+          }
+        }
+        offset += 100;
+      }
+
+      for (let t = 0; t < remainingTens; t++) {
+        const columnBlocks = allBlocks.slice(offset + t * 10, offset + t * 10 + 10);
         if (columnBlocks.length === 10) {
           columns.push(columnBlocks);
         }
       }
-      offset += 100;
-    }
+      offset += remainingTens * 10;
 
-    for (let t = 0; t < remainingTens; t++) {
-      const start = offset + t * 10;
-      const columnBlocks = allBlocks.slice(start, start + 10);
-      if (columnBlocks.length === 10) {
-        columns.push(columnBlocks);
+      if (onesCount > 0) {
+        const onesBlocks = allBlocks.slice(offset, offset + onesCount);
+        if (onesBlocks.length > 0) {
+          columns.push(onesBlocks);
+        }
+      }
+    } else {
+      // n >= 1000: compose from digit groups without calling getBlocksForNumber(n)
+      // Each thousand = 10 × (1 hundred) = 100 columns of 10 blocks
+      // Each hundred = 10 columns of 10 blocks
+      // Each ten = 1 column of 10 blocks
+      // Ones = 1 partial column
+      const thousandsDigit = Math.floor(safeN / 1000);
+      const afterThousands = safeN % 1000;
+      const hundredsDigit = Math.floor(afterThousands / 100);
+      const afterHundreds = afterThousands % 100;
+      const remainingTens = Math.floor(afterHundreds / 10);
+      const onesCount = afterHundreds % 10;
+
+      // Thousand groups: each uses getBlocksForNumber(100) repeated 10 times
+      const hundredBlocks = getBlocksForNumber(100);
+      for (let t = 0; t < thousandsDigit; t++) {
+        for (let g = 0; g < 10; g++) {
+          for (let c = 0; c < 10; c++) {
+            columns.push(hundredBlocks.slice(c * 10, c * 10 + 10));
+          }
+        }
+      }
+
+      // Remaining hundreds (< 1000 portion)
+      if (hundredsDigit > 0 || remainingTens > 0 || onesCount > 0) {
+        const remainderBlocks = getBlocksForNumber(afterThousands);
+        let offset = 0;
+
+        for (let h = 0; h < hundredsDigit; h++) {
+          const hBlocks = remainderBlocks.slice(offset, offset + 100);
+          for (let c = 0; c < 10; c++) {
+            const columnBlocks = hBlocks.slice(c * 10, c * 10 + 10);
+            if (columnBlocks.length === 10) {
+              columns.push(columnBlocks);
+            }
+          }
+          offset += 100;
+        }
+
+        for (let t = 0; t < remainingTens; t++) {
+          const columnBlocks = remainderBlocks.slice(offset + t * 10, offset + t * 10 + 10);
+          if (columnBlocks.length === 10) {
+            columns.push(columnBlocks);
+          }
+        }
+        offset += remainingTens * 10;
+
+        if (onesCount > 0) {
+          const onesBlocks = remainderBlocks.slice(offset, offset + onesCount);
+          if (onesBlocks.length > 0) {
+            columns.push(onesBlocks);
+          }
+        }
       }
     }
-    offset += remainingTens * 10;
 
-    if (onesCount > 0) {
-      const onesBlocks = allBlocks.slice(offset, offset + onesCount);
-      if (onesBlocks.length > 0) {
-        columns.push(onesBlocks);
-      }
-    }
-
-    return columns.length > 0 ? columns : [getBlocksForNumber(safeN)];
+    return columns.length > 0 ? columns : [getBlocksForNumber(Math.min(safeN, MAX_SUPPORTED_N))];
   }
 }

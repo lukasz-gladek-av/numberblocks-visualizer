@@ -5,7 +5,7 @@
  */
 export function setupControls(staircase, updateCallback, adjustCameraCallback) {
   const MIN_N = 1;
-  const MAX_N = 999;
+  const getMaxN = () => staircase.getMode() === 'column' ? Infinity : 999;
 
   // Button elements
   const btnPlusTen = document.getElementById('btn-plus-ten');
@@ -39,7 +39,7 @@ export function setupControls(staircase, updateCallback, adjustCameraCallback) {
       return;
     }
     const currentN = staircase.getCurrentN();
-    const targetN = Math.min(MAX_N, Math.max(MIN_N, currentN + pendingDelta));
+    const targetN = Math.min(getMaxN(), Math.max(MIN_N, currentN + pendingDelta));
     pendingDelta = 0;
     if (targetN === currentN) {
       updateStepButtons();
@@ -183,7 +183,8 @@ export function setupControls(staircase, updateCallback, adjustCameraCallback) {
   function updateStepButtons() {
     const n = staircase.getCurrentN();
     const isMin = n <= MIN_N;
-    const isMax = n >= MAX_N;
+    const maxN = getMaxN();
+    const isMax = isFinite(maxN) && n >= maxN;
     btnMinus.disabled = isMin;
     btnMinusTen.disabled = isMin;
     btnPlus.disabled = isMax;
